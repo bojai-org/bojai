@@ -1,26 +1,15 @@
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QVBoxLayout, QPushButton, QSpacerItem, QSizePolicy, QLabel, QFrame
-import sys
-import os
 
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtWidgets import QProgressBar, QDialog, QVBoxLayout, QLabel, QPushButton
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import QMessageBox
-import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QGroupBox, QLabel
-import torch
-import random
-import numpy as np
+from PyQt5.QtWidgets import QVBoxLayout, QPushButton, QLabel
 from global_vars import browseDict, getNewModel, init_model
 from train import Train  # Make sure 'train' module exists
-
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QPushButton, QSpacerItem, QSizePolicy, QFormLayout, QGroupBox
-
-from model import CLIModelCNN
-
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QPushButton, QSpacerItem, QSizePolicy, QFormLayout
 from PyQt5.QtCore import QThread, pyqtSignal
-
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
 
 class TrainingThread(QThread):
@@ -28,7 +17,7 @@ class TrainingThread(QThread):
     progress_updated = pyqtSignal(int, arguments=['progress'])
     loss_updated = pyqtSignal(float)
 
-    def __init__(self, trainer : Train, num_epochs, trainWindow):
+    def __init__(self, trainer : Train):
         super().__init__()
         self.trainer = trainer.trainerManager.trainer
 
@@ -201,7 +190,7 @@ class TrainWindow(QtWidgets.QWidget):
 
         success_msg = QtWidgets.QMessageBox()
         success_msg.setWindowTitle("Evaluation Score")
-        success_msg.setText("Accuracy is: " +  str(score))
+        success_msg.setText(browseDict['eval matrice'] +  str(score))
         success_msg.setIcon(QtWidgets.QMessageBox.Information)
         success_msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         success_msg.exec_()
@@ -290,7 +279,7 @@ class TrainWindow(QtWidgets.QWidget):
 
         # Start training
         try: 
-            self.training_thread = TrainingThread(self.train.trainerManager.trainer)
+            self.training_thread = TrainingThread(self.train)
             self.training_thread.progress_updated.connect(self.update_progress)
             self.training_thread.loss_updated.connect(self.update_loss) 
             self.training_thread.start()
@@ -579,32 +568,6 @@ class TrainWindow(QtWidgets.QWidget):
             msg.setWindowTitle("Error")
             msg.setText(f"An error occurred: {str(e)}")  # Display error message
             msg.exec_()
-
-from prepare import Prepare
-from model import CLIModelCNN
-if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-
-    # Assuming you have a Train object to pass here
-    model_name = "test1"
-    data_address = "C:\\Users\\soghm\\OneDrive\\Desktop\\gegt_dataset"
-    training_div = 0.2
-    eval_div = 0.8
-    tokenizer = None
-    model = CLIModelCNN()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    prep = Prepare(model_name, model, device, tokenizer, data_address, 'cli', (training_div, eval_div), '')
-    hyperparams = {
-    'learning_rate': 1e-5,
-    'num_epochs' : 10,
-    'num_batches' : 1
-    }
-    train = Train(prep, hyperparams)  # Initialize the Train object (make sure this is correct)
-    
-    window = TrainWindow(train)
-    window.show()
-
-    sys.exit(app.exec_())
 
 
 

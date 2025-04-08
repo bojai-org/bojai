@@ -1,15 +1,10 @@
 from abc import ABC, abstractmethod
 import torch
-import pandas as pd
-import torch.optim as optim
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
-from transformers import AutoTokenizer, AutoModel
-from sklearn.metrics import accuracy_score
-import numpy as np
-from processor import Processor
-import requests
+from torch.utils.data import  DataLoader
 #decides which trainer to use, depending on the task. Used by the train stage
+
+
 class TrainingManager:
     def __init__(self, task_type, model, eval, training, device, tokenizer, hyper_params: dict):
         self.trainer: Trainer = None

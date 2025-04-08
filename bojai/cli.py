@@ -5,15 +5,6 @@ import subprocess
 from pathlib import Path
 
 
-SHARED_FILES = [
-    "bojai/model/deploy.py",
-    "bojai/model/deployUI.py",
-    "bojai/model/initialiseUI.py",
-    "bojai/model/prepare.json",
-    "bojai/model/prepareUI.py",
-    "bojai/model/train.py", 
-    "bojai/model/trainUI.py"
-]
 
 
 def init_model_workspace(model_name):
@@ -57,14 +48,18 @@ def launch_model(model_name):
 
 
 
-def train_model(model_name):
-    print(f"[Training] Starting training loop for model: {model_name}")
-    # Placeholder logic for training
+def remove_model(model_name):
+    workspace_dir = Path(f"applets/{model_name}")
+    if workspace_dir.exists() and workspace_dir.is_dir():
+        try:
+            shutil.rmtree(workspace_dir)
+            print(f"Removed workspace for model '{model_name}' at ./{workspace_dir}/")
+        except PermissionError as e:
+            print(f"⚠️ Could not delete '{workspace_dir}': {e}")
+            print("Make sure no files are open or being used by another process.")
+    else:
+        print(f"Workspace '{model_name}' does not exist.")
 
-
-def evaluate_model(model_name):
-    print(f"[Evaluation] Evaluating model: {model_name}")
-    # Placeholder logic for evaluation
 
 
 def main():
@@ -75,28 +70,24 @@ def main():
     parser_start = subparsers.add_parser("start", help="Start a model")
     parser_start.add_argument("--model", required=True, help="Model to start (e.g., get, summarizer)")
 
-    # bojai train
-    parser_train = subparsers.add_parser("train", help="Train a model")
-    parser_train.add_argument("--model", required=True, help="Model to train")
+    # bojai init
+    parser_init = subparsers.add_parser("build", help="Initialize a model workspace")
+    parser_init.add_argument("--model", required=True, help="Model to initialize (e.g., get, summarizer)")
 
     # bojai evaluate
-    parser_eval = subparsers.add_parser("evaluate", help="Evaluate a model")
+    parser_eval = subparsers.add_parser("remove", help="Remove a built model")
     parser_eval.add_argument("--model", required=True, help="Model to evaluate")
-
-    # bojai init
-    parser_init = subparsers.add_parser("init", help="Initialize a model workspace")
-    parser_init.add_argument("--model", required=True, help="Model to initialize (e.g., get, summarizer)")
 
     args = parser.parse_args()
 
     if args.command == "start":
         launch_model(args.model)
-    elif args.command == "train":
-        train_model(args.model)
-    elif args.command == "evaluate":
-        evaluate_model(args.model)
-    elif args.command == "init":
+
+    elif args.command == "build":
         init_model_workspace(args.model)
+    
+    elif args.command == "remove":
+        remove_model(args.model)
 
 
 if __name__ == "__main__":

@@ -1,10 +1,10 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QVBoxLayout
 import sys
 import torch
 import sys
 from prepare import Prepare
-from global_vars import browseDict, getNewModel, getNewTokenizer, hyper_params, task_type
+from global_vars import browseDict, getNewModel, getNewTokenizer, task_type, options
 import sys
 
 class MainWindow(QtWidgets.QWidget):
@@ -57,6 +57,10 @@ class MainWindow(QtWidgets.QWidget):
         division_layout.addLayout(self.eval_div_layout())
 
         main_layout.addLayout(division_layout)
+
+        if browseDict['options'] == 1:
+            from global_vars import options
+            main_layout.addLayout(self.select_tokenizer_layout())
 
         button_layout = QtWidgets.QHBoxLayout()
         self.start_button = QtWidgets.QPushButton("START →")
@@ -208,7 +212,31 @@ class MainWindow(QtWidgets.QWidget):
         form_button_layout.addWidget(form_widget)
 
         return form_button_layout
+    
+    def select_tokenizer_layout(self):
+        selection_layout = QVBoxLayout()
+        self.comboBox = QtWidgets.QComboBox(self)
+        self.comboBox.addItems( options.keys())
+        self.comboBox.setStyleSheet("""
+            background-color: white;
+            color: black;
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 16px;
+        """)
+        self.explanation1b =  QtWidgets.QLabel("Go to the documentation to learn how to select the right option.")
+        self.explanation1b.setStyleSheet("font-size: 16px; color: black;")
+        
+        self.explanation2 =  QtWidgets.QLabel("You cannot change this after starting the session, to change it, start a new session.")
+        self.explanation2.setStyleSheet("font-size: 16px; color: red;")
 
+        
+        selection_layout.addWidget(self.explanation1b)
+        selection_layout.addWidget(self.comboBox)
+        selection_layout.addWidget(self.explanation2)
+
+        return selection_layout
+    
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
 
@@ -227,7 +255,7 @@ class MainWindow(QtWidgets.QWidget):
         file_dialog = QtWidgets.QFileDialog()
         which_one = browseDict['init']
         if which_one: 
-            file_path = file_dialog.getOpenFileName(self, "Select File")
+            file_path, _ = file_dialog.getOpenFileName(self, "Select File")
         else: 
             file_path = file_dialog.getExistingDirectory(self, "Select Directory")
         if file_path:
@@ -238,6 +266,8 @@ class MainWindow(QtWidgets.QWidget):
         data_address = self.data_address_input.text()
         training_div = self.training_input.text()
         eval_div = self.eval_input.text()
+        if browseDict['options'] == 1:
+            architecture = self.comboBox.currentText()
         try:
             training_div = float(training_div)
             eval_div = float(eval_div)
@@ -250,8 +280,15 @@ class MainWindow(QtWidgets.QWidget):
             return
         
         try: 
-            model = getNewModel()
-            tokenizer = getNewTokenizer()
+            if browseDict['options-where'] == 0:
+                model = getNewModel()
+                tokenizer = options[architecture]()
+            elif browseDict['options-where'] == 1:
+                model = options[architecture]()
+                tokenizer = getNewTokenizer()
+            else:           
+                model = getNewModel()
+                tokenizer = getNewTokenizer()
             device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             prep = Prepare(model_name, model, device, tokenizer, data_address, task_type, (training_div, eval_div), ',')
 
@@ -292,7 +329,6 @@ class MainWindow(QtWidgets.QWidget):
 
     def cancel_action(self):
         exit(0)
-
 
 
 

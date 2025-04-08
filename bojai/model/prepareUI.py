@@ -1,23 +1,10 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import QMessageBox
-import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QGroupBox, QLabel, QFrame
-import torch
-from transformers import AutoTokenizer, AutoModel
-import random
-from global_vars import browseDict, getNewModel, getNewTokenizer, hyper_params
-from transformers import BertConfig, ViTConfig, VisionEncoderDecoderConfig, VisionEncoderDecoderModel
-from transformers import ViTImageProcessor, BertTokenizer, VisionEncoderDecoderModel
-
-import sys
-import os
-
-
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QFrame
+from global_vars import browseDict, hyper_params
 from prepare import Prepare
 from train import Train
-from model import CLIModelCNN, CharTokenizer
-
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QPushButton, QSpacerItem, QSizePolicy, QFormLayout, QGroupBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,  QPushButton, QSpacerItem, QSizePolicy
 
 class PrepWindow(QWidget):
     def __init__(self, prep: Prepare, trained = False):
@@ -368,7 +355,7 @@ class PrepWindow(QWidget):
         file_dialog = QtWidgets.QFileDialog()
         which_one = browseDict['prep']
         if which_one: 
-            file_path = file_dialog.getOpenFileName(self, "Select File")
+            file_path, _ = file_dialog.getOpenFileName(self, "Select File")
         else: 
             file_path = file_dialog.getExistingDirectory(self, "Select Directory")
         if file_path:
@@ -419,12 +406,12 @@ class PrepWindow(QWidget):
             msg.setText("An error occurred in prep, most probably because we cannot connect to our server to validate this session. If it persists contact support")  
             msg.exec_()
             return
-
-        hyperparams = hyper_params
-        train = Train(self.prep, hyperparams)
-        from trainUI import TrainWindow
+        
         # Create and show the new window
         try:
+            hyperparams = hyper_params
+            train = Train(self.prep, hyperparams)
+            from trainUI import TrainWindow
             self.new_window = TrainWindow(train, trained = self.trained)
         except Exception as e:
             msg = QMessageBox()
@@ -446,17 +433,3 @@ class PrepWindow(QWidget):
         success_msg.setIcon(QtWidgets.QMessageBox.Information)
         success_msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         success_msg.exec_()
-
-if __name__ == "__main__":
-    model_name = "test1"
-    data_address = 'C:\\initial_applet\\bojai-vexor-applet\\actual_data'
-    training_div = 0.8
-    eval_div = 0.2
-    tokenizer = None
-    model = CLIModelCNN()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    prep = Prepare(model_name, model, device, tokenizer, data_address, 'cli', (training_div, eval_div), '')
-    app = QtWidgets.QApplication(sys.argv)
-    window = PrepWindow(prep)
-    window.show()
-    sys.exit(app.exec_())

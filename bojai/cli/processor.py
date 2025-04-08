@@ -1,12 +1,7 @@
 from abc import ABC, abstractmethod
 import torch
 import os
-import pandas as pd
-import torch.optim as optim
-import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
-from transformers import AutoTokenizer, AutoModel
-from sklearn.metrics import accuracy_score
+from torch.utils.data import Dataset
 import numpy as np
 from PIL import Image
 

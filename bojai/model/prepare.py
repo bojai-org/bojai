@@ -29,7 +29,6 @@ class Prepare():
         self.model_name = model_name
         self.task_type = task_type
         self.data_sep = data_sep
-        init_model(self.data, self.model)
         self.prep_ready = True
 
 
@@ -52,12 +51,14 @@ class Prepare():
         data_dir = self.check_data_match(data_dir, self.task_type, self.data_sep)
         self.data_dir = data_dir
         div = division
-        if division == None:
+        if div == None:
             div = self.division
+        self.division = div
         self.data : ProcessorManager = ProcessorManager(self.data_dir, div, self.model, self.device, self.tokenizer, self.task_type)
-        self.eval, self.train = self.get_eval_train()
+        self.eval, self.train = self.data.eval, self.data.train
         self.num_data_points = len(self.data.processor)
         self.prep_ready = True
+
 
     #returns tokenized data 
     def check_tokenized(self, idx = None):
@@ -75,4 +76,4 @@ class Prepare():
     
     #returns the data and the models, to be used in the training stage. 
     def get_training_tools(self):
-        return self.eval.processor, self.train.processor, self.model, self.tokenizer, self.device
+        return self.eval, self.train, self.model, self.tokenizer, self.device

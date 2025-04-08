@@ -5,6 +5,8 @@ import requests
 import importlib.util
 from cryptography.fernet import Fernet
 from trainer import TrainingManager
+from global_vars import init_model
+
 #2nd stage of training an ML model, used for training stage to train and initially evaluate the model, hyper-params should match the format in TrainingManager. 
 class Train(): 
     def __init__(self, prep : Prepare, hyper_params):
@@ -15,6 +17,7 @@ class Train():
             self.eval, self.training , self.model, self.tokenizer, self.device = prep.get_training_tools()
         else:
             raise ValueError("preparation stage did not finish, cannot start training")
+        init_model(self.prep.data, self.model, hyper_params)
         self.trainerManager = TrainingManager(prep.task_type, self.model, self.eval, self.training, self.device, self.tokenizer, hyper_params)
         self.trainerManager.initialise()
         self.task_type = self.prep.task_type

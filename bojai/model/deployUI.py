@@ -1,26 +1,16 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import QMessageBox
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QGroupBox, QLabel, QFrame
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QFrame
 import torch
-from transformers import AutoTokenizer, AutoModel
-import random
 import os
 from global_vars import browseDict
 import torch
-from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModel
-import torch.optim as optim
-import torch.nn as nn
-import numpy as np
-
 from deploy import Deploy
 from prepare import Prepare
 from train import Train
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QPushButton, QSpacerItem, QSizePolicy, QFormLayout
 
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QPushButton, QSpacerItem, QSizePolicy, QFormLayout, QGroupBox
-
-from transformers import ViTImageProcessor, BertTokenizer, VisionEncoderDecoderModel
 class DeployWindow(QWidget):
     def __init__(self, deploy : Deploy, trained = False):
         self.deploy = deploy
@@ -390,7 +380,7 @@ class DeployWindow(QWidget):
         file_dialog = QtWidgets.QFileDialog()
         which_one = browseDict['deploy_new_data']
         if which_one: 
-            file_path = file_dialog.getOpenFileName(self, "Select File")
+            file_path, _ = file_dialog.getOpenFileName(self, "Select File")
         else: 
             file_path = file_dialog.getExistingDirectory(self, "Select Directory")
         if file_path:
@@ -405,7 +395,7 @@ class DeployWindow(QWidget):
 
     def browse3(self):
         file_dialog = QtWidgets.QFileDialog()
-        file_path, _ = file_dialog.getOpenFileName(self, "Select File")  # Select a single file
+        file_path = file_dialog.getOpenFileName(self, "Select File")  # Select a single file
         if file_path:
             self.use_model_output.setText(file_path)
     
@@ -488,21 +478,22 @@ class DeployWindow(QWidget):
         pass
 
 
+from model import LogisticRegressionCLN 
+from train import Train 
+from deploy import Deploy
 
-from model import CLIModelCNN 
 if __name__ == "__main__":
     model_name = "test1"
-    data_address = "C:\\Users\\soghm\\OneDrive\\Desktop\\gegt_dataset"
-    training_div = 0.2
-    eval_div = 0.8
+    data_address = 'C:\\initial_applet\\bojai-vexor-applet\\data_sample.json'
+    training_div = 0.8
+    eval_div = 0.2
     tokenizer = None
-    model = CLIModelCNN()
+    model = LogisticRegressionCLN()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    prep = Prepare(model_name, model, device, tokenizer, data_address, 'cli', (training_div, eval_div), '')
+    prep = Prepare(model_name, model, device, tokenizer, data_address, 'cln', (training_div, eval_div), '')
     hyperparams = {
     'learning_rate': 1e-5,
-    'num_epochs' : 10,
-    'num_batches' : 1
+    'num_epochs': 1
     }
     train = Train(prep, hyperparams)  # Initialize the Train object (make sure this is correct)
     deploy = Deploy(train)

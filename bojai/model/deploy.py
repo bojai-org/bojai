@@ -1,10 +1,7 @@
 from train import Train
-from prepare import Prepare
 from processor import ProcessorManager
 from user import userManager
-import json
-import yaml
-import xml.etree.ElementTree as ET
+
 import sys
 
 #3rd stage of training an ML model, deploys the model after training or the model as-is
@@ -15,6 +12,7 @@ class Deploy():
         self.prep = self.trainer.prep
         self.max_length = max_length
         self.manager = userManager(self.trainer.task_type, self.trainer.model, self.trainer.tokenizer, self.trainer.device, max_length)
+        self.new_data = None
 
     #evaluates the data. If 0, uses the inital evaluation, if 1 uses uploaded evaluation dataset. 
     def get_eval_score(self, which_one):
