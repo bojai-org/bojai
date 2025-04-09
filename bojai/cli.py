@@ -9,6 +9,7 @@ from pathlib import Path
 
 def init_model_workspace(model_name):
     workspace_dir = f"applets/{model_name}"
+
     if os.path.exists(workspace_dir):
         print(f"Workspace '{model_name}' already exists.")
         return
@@ -35,6 +36,24 @@ def init_model_workspace(model_name):
         return
     
     print(f"Initialized workspace for model '{model_name}' at ./{model_name}/")
+
+
+def new_costum_model(model_name, dir):
+    workspace_dir = os.path.join(dir, model_name)
+    print(workspace_dir)
+    if os.path.exists(workspace_dir):
+        print(f"Workspace '{model_name}' already exists.")
+        return
+
+    os.makedirs(workspace_dir)
+    print(f"{workspace_dir} directory created, now copying files")
+
+    # Copy shared files
+    for file_path in os.listdir("mock_model"):
+        filename = file_path
+        file_path = os.path.join("mock_model", filename)
+        shutil.copy(file_path, f"{workspace_dir}/{filename}")
+        print(f"copied {filename}")
 
 
 def launch_model(model_name, stage):
@@ -106,7 +125,12 @@ def main():
 
     # bojai evaluate
     parser_eval = subparsers.add_parser("remove", help="Remove a built model")
-    parser_eval.add_argument("--model", required=True, help="Model to evaluate")
+    parser_eval.add_argument("--model", required=True, help="Model to remove")
+
+    # bojai evaluate
+    parser_eval = subparsers.add_parser("create", help="Create a costum machine learning pipeline. Code your own processor, model, trainer, and deployer")
+    parser_eval.add_argument("--model", required=True, help="give a name to your pipeline")
+    parser_eval.add_argument("--directory", required=True, help="Enter where you want to access the code for your costum pipeline's directory")
 
     args = parser.parse_args()
 
@@ -118,7 +142,9 @@ def main():
     
     elif args.command == "remove":
         remove_model(args.model)
-
+    
+    elif args.command == "create":
+        new_costum_model(args.model, args.directory)
 
 if __name__ == "__main__":
     main()
