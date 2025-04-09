@@ -45,19 +45,39 @@ class Processor(ABC, Dataset):
         pass
 
 
-'''
-@TODO 
-must implement your custom processor. Your processor MUST extend Processor and implement all abstract methods. 
-The classes extending  should: 
-- should split data
-- be able to accept some ops on data if they process numbers
-- should tokenize data
-- should shuffle data
-- should handle missing data and duplicates
-
-len returns the length of your data.
-getitem returns a tokenized item from your data at idx.
-get_item_untokenized returns a raw item from your data at idx.
-'''
 class YourDataProcessor(Processor):
-    pass
+    def __init__(self, data_dir, division, model, device, tokenizer, is_main=True):
+        super().__init__(data_dir, division, model, device, tokenizer)
+        self.is_main = is_main
+        self.inputs = []
+        self.outputs = []
+
+        # Load and split your data here
+        # Example: CSV, JSON, TXT, folders, etc.
+        # You are expected to assign:
+        # - self.inputs_train
+        # - self.inputs_eval
+        # - self.outputs_train
+        # - self.outputs_eval
+
+        # self.inputs_train = ...
+        # self.outputs_train = ...
+        # self.inputs_eval = ...
+        # self.outputs_eval = ...
+
+    def __len__(self):
+        # return total length depending on whether it's train or eval
+        return len(self.inputs_train if self.is_main else self.inputs)
+
+    def __getitem__(self, idx):
+        # return tokenized input/output pair
+        # example:
+        # return {
+        #     "input_ids": torch.tensor(...),
+        #     "labels": torch.tensor(...)
+        # }
+        raise NotImplementedError("Implement __getitem__")
+
+    def get_item_untokenized(self, idx):
+        # return untokenized raw example, useful for debugging
+        raise NotImplementedError("Implement get_item_untokenized")

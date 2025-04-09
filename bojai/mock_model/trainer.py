@@ -1,6 +1,27 @@
 from abc import ABC, abstractmethod
 
-#decides which trainer to use, depending on the task. Used by the train stage
+# ───────────────────────────────────────────────────────────────────────────────
+# TrainingManager: Chooses the right Trainer for your model and passes it what it needs
+# ───────────────────────────────────────────────────────────────────────────────
+'''
+📦 The TrainingManager is the brain of the training stage.
+It decides which Trainer to use based on your model's task type, and ensures it has:
+    - The right model
+    - The right data
+    - The right hyperparameters
+    - The right setup (device, tokenizer, etc.)
+
+Every model you create must have a corresponding entry in this manager.
+
+When you call `initialise()`, the manager:
+1. Looks up what hyperparameters are required for your model.
+2. Validates them.
+3. Instantiates your Trainer class with all the pieces.
+
+🧠 This allows Bojai to dynamically support ANY type of trainer — you can plug in whatever training logic you want.
+
+🔁 If you change the hyperparameters mid-session, call `edit_hyper_params()` to reinitialize the trainer with the new values.
+'''
 class TrainingManager:
     def __init__(self, task_type, model, eval, training, device, tokenizer, hyper_params: dict):
         self.trainer: Trainer = None
@@ -55,8 +76,24 @@ class TrainingManager:
 
             
 
-#abstract class that is used as ab ase for other trainers. It dynamically assigns the hyper-params 
-# Each Model must come with a required hyper-params set added to the manager above.         
+# ───────────────────────────────────────────────────────────────────────────────
+# Trainer: Abstract base class for all trainers
+# ───────────────────────────────────────────────────────────────────────────────
+'''
+🧠 Every custom Trainer must extend this abstract class.
+
+It ensures consistency across all trainers, and automatically sets up:
+- The model
+- The device
+- The tokenizer
+- Any hyperparameters you defined (they are auto-assigned as instance variables)
+
+You MUST implement:
+- train()
+- evaluate()
+
+This lets Bojai treat all trainers the same way, even though the inside can be 100% custom.
+''' 
 class Trainer(ABC):
     def __init__(self, model, device, tokenizer, hyper_params : dict):
         super().__init__()
@@ -76,27 +113,56 @@ class Trainer(ABC):
     def evaluate(self, eval_dataset = None):
         pass
 
-'''
-@TODO 
 
-Add your trainer, it must extend Trainer and implement train and evaluate. 
-Each Model must come with a required hyper-params set added to the manager above.   
+class ImplementYourTrainer(Trainer):
+    def __init__(self, model, training_data, eval_data, device, tokenizer, hyper_params: dict):
+        super().__init__(model, device, tokenizer, hyper_params)
 
-train is the training loop and evalaute is a way to evaluate model output. 
+        # 🧠 Store your data and unpack hyperparameters here
+        self.training_data = training_data
+        self.eval_data = eval_data
 
-progrss_worker is a pyqtSignal, use to report training progress. Use to signal if needed. 
-Example: 
-progress = int((current_step / total_steps) * 100)
-progrss_worker.emit(progress)  # Emit signal to UI
+        # Example: self.batch_size = self.batch_size
+        # You can initialize optimizers, metrics, or caches here if needed
 
-loss_worker is a pyqtSignal, use to report loss. 
-Example:
-avg_loss = total_loss / len(self.train_loader)
-loss_updated.emit(avg_loss)
+    def train(self, qthread, progress_worker, loss_worker):
+        '''
+        This is your training loop. You are free to implement it however you like.
+        
+        🧩 Tips:
+        - Loop through self.training_data however fits your model
+        - Use self.model to call your forward or fit logic
+        - Use self.device and self.tokenizer if needed
+        - Emit progress with:   progress_worker.emit(percent)
+        - Emit loss with:       loss_worker.emit(loss_value)
+        - Call qthread.msleep(1) to allow UI to refresh
+        
+        Example (pseudo-code):
+        total_steps = len(self.training_data)
+        for i, data in enumerate(self.training_data):
+            loss = self.model.train_step(data)
+            progress = int((i + 1) / total_steps * 100)
+            progress_worker.emit(progress)
+            loss_worker.emit(loss)
+            qthread.msleep(1)
+        '''
 
-Once you signal workers, you need to allow UI to refresh using qthread. Copy-paste this line: 
-qthread.msleep(1) 
-'''
-class ImplementYourTrainer(Trainer): 
-    pass
+        pass
 
+    def evaluate(self, eval_dataset=None):
+        '''
+        This is your evaluation function. You can calculate accuracy, BLEU, MSE — anything.
+
+        If eval_dataset is provided, use that instead of self.eval_data.
+        
+        Example (pseudo-code):
+        total = 0
+        correct = 0
+        for data in eval_dataset:
+            prediction = self.model.predict(data)
+            correct += (prediction == data.label)
+            total += 1
+        return correct / total
+        '''
+
+        pass
