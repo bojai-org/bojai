@@ -6,7 +6,10 @@ from PyQt5.QtWidgets import QProgressBar, QDialog, QVBoxLayout, QLabel, QPushBut
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QVBoxLayout, QPushButton, QLabel
-from global_vars import browseDict, getNewModel, init_model
+from global_vars import browseDict, getNewModel, init_model, getNewModel, getNewTokenizer, hyper_params, task_type
+import torch 
+import sys
+from prepare import Prepare
 from train import Train  # Make sure 'train' module exists
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QPushButton, QSpacerItem, QSizePolicy, QFormLayout
 from PyQt5.QtCore import QThread, pyqtSignal
@@ -572,3 +575,20 @@ class TrainWindow(QtWidgets.QWidget):
 
 
 
+if __name__ == "__main__":
+    
+    model_name = ""
+    data_address = input("enter dataset address: ")
+    training_div = 0.8
+    eval_div = 0.2
+    tokenizer = getNewTokenizer()
+    model = getNewModel()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    prep = Prepare(model_name, model, device, tokenizer, data_address, task_type, (training_div, eval_div), '')
+    hyperparams = hyper_params
+    train = Train(prep, hyperparams)  
+    app = QtWidgets.QApplication(sys.argv)
+    window = TrainWindow(train)
+    
+    window.show()
+    sys.exit(app.exec_())

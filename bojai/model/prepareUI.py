@@ -1,7 +1,9 @@
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QFrame
-from global_vars import browseDict, hyper_params
+from global_vars import browseDict, hyper_params, getNewModel, getNewTokenizer, task_type
+import torch 
+import sys
 from prepare import Prepare
 from train import Train
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel,  QPushButton, QSpacerItem, QSizePolicy
@@ -433,3 +435,19 @@ class PrepWindow(QWidget):
         success_msg.setIcon(QtWidgets.QMessageBox.Information)
         success_msg.setStandardButtons(QtWidgets.QMessageBox.Ok)
         success_msg.exec_()
+
+
+if __name__ == "__main__":
+    
+    model_name = ""
+    data_address = input("enter dataset address: ")
+    training_div = 0.8
+    eval_div = 0.2
+    tokenizer = getNewTokenizer()
+    model = getNewModel()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    prep = Prepare(model_name, model, device, tokenizer, data_address, task_type, (training_div, eval_div), '')
+    app = QtWidgets.QApplication(sys.argv)
+    window = PrepWindow(prep)
+    window.show()
+    sys.exit(app.exec_())

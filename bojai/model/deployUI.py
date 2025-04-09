@@ -4,7 +4,7 @@ import sys
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QFrame
 import torch
 import os
-from global_vars import browseDict
+from global_vars import browseDict, getNewModel, getNewTokenizer, hyper_params, task_type
 import torch
 from deploy import Deploy
 from prepare import Prepare
@@ -478,24 +478,22 @@ class DeployWindow(QWidget):
         pass
 
 
-from model import LogisticRegressionCLN 
-from train import Train 
-from deploy import Deploy
+
+
 
 if __name__ == "__main__":
-    model_name = "test1"
-    data_address = 'C:\\initial_applet\\bojai-vexor-applet\\data_sample.json'
+    
+    model_name = ""
+    data_address = input("enter dataset address: ")
     training_div = 0.8
     eval_div = 0.2
-    tokenizer = None
-    model = LogisticRegressionCLN()
+    tokenizer = getNewTokenizer()
+    model = getNewModel()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    prep = Prepare(model_name, model, device, tokenizer, data_address, 'cln', (training_div, eval_div), '')
-    hyperparams = {
-    'learning_rate': 1e-5,
-    'num_epochs': 1
-    }
-    train = Train(prep, hyperparams)  # Initialize the Train object (make sure this is correct)
+    prep = Prepare(model_name, model, device, tokenizer, data_address, task_type, (training_div, eval_div), '')
+    hyperparams = hyper_params
+    train = Train(prep, hyperparams)  
+    
     deploy = Deploy(train)
     app = QtWidgets.QApplication(sys.argv)
     window = DeployWindow(deploy)

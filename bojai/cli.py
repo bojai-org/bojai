@@ -37,14 +37,43 @@ def init_model_workspace(model_name):
     print(f"Initialized workspace for model '{model_name}' at ./{model_name}/")
 
 
-def launch_model(model_name):
+def launch_model(model_name, stage):
     workspace_dir = Path(f"applets/{model_name}")
-    initialise_file = workspace_dir / "initialiseUI.py"
 
-    if not initialise_file.exists():
-        raise FileNotFoundError(f"Cannot find 'initialiseUI.py' in {workspace_dir}/")
+    if stage == 'all':
+        initialise_file = workspace_dir / "initialiseUI.py"
 
-    subprocess.run(["python", "initialiseUI.py"], cwd=workspace_dir)
+        if not initialise_file.exists():
+            raise FileNotFoundError(f"Cannot find 'initialiseUI.py' in {workspace_dir}/")
+
+        subprocess.run(["python", "initialiseUI.py"], cwd=workspace_dir)
+    
+    elif stage == 'prepare':
+        initialise_file = workspace_dir / "prepareUI.py"
+
+        if not initialise_file.exists():
+            raise FileNotFoundError(f"Cannot find 'prepareUI.py' in {workspace_dir}/")
+
+        subprocess.run(["python", "prepareUI.py"], cwd=workspace_dir)
+
+    elif stage == 'train':
+        initialise_file = workspace_dir / "trainUI.py"
+
+        if not initialise_file.exists():
+            raise FileNotFoundError(f"Cannot find 'trainUI.py' in {workspace_dir}/")
+
+        subprocess.run(["python", "trainUI.py"], cwd=workspace_dir)
+
+    elif stage == 'deploy':
+        initialise_file = workspace_dir / "deployUI.py"
+
+        if not initialise_file.exists():
+            raise FileNotFoundError(f"Cannot find 'deployUI.py' in {workspace_dir}/")
+
+        subprocess.run(["python", "deployUI.py"], cwd=workspace_dir)
+    
+    else: 
+        raise ValueError("stage name is wrong, must be one of prepare, train, or deploy.")
 
 
 
@@ -69,6 +98,7 @@ def main():
     # bojai start
     parser_start = subparsers.add_parser("start", help="Start a model")
     parser_start.add_argument("--model", required=True, help="Model to start (e.g., get, summarizer)")
+    parser_start.add_argument("--stage", type=str, default='all', help="Port to run the model on (default: 8080)")
 
     # bojai init
     parser_init = subparsers.add_parser("build", help="Initialize a model workspace")
@@ -81,7 +111,7 @@ def main():
     args = parser.parse_args()
 
     if args.command == "start":
-        launch_model(args.model)
+        launch_model(args.model, args.stage)
 
     elif args.command == "build":
         init_model_workspace(args.model)
