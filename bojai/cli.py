@@ -145,7 +145,20 @@ def remove_model(model_name):
     else:
         print(f"Workspace '{model_name}' does not exist.")
 
-
+def list_pipelines(pipelines, builds):
+    if builds and os.path.exists("applets"):
+        print("Built pipelines are: ")
+        for dir in os.listdir(applets):
+            if dir[:3] == "bm":
+                print(dir, end=',')
+        print("\n")
+    if pipelines:
+        print("Pre-built pipelines are: ")
+        for dir in os.listdir(applets):
+            if dir[:3] == "pbm":
+                print(dir, end=',')
+        print("\n")
+        
 
 def main():
     parser = argparse.ArgumentParser(description="BojAi Command Line Interface")
@@ -163,15 +176,19 @@ def main():
     parser_init.add_argument("--directory", required=False,type=str, default='none', help="Enter where you stored the code for your costum model")
     
 
-    # bojai evaluate
+    # bojai remove
     parser_eval = subparsers.add_parser("remove", help="Remove a built model")
     parser_eval.add_argument("--model", required=True, help="Model to remove")
 
-    # bojai evaluate
+    # bojai create
     parser_eval = subparsers.add_parser("create", help="Create a costum machine learning pipeline. Code your own processor, model, trainer, and deployer")
     parser_eval.add_argument("--model", required=True, help="give a name to your pipeline")
     parser_eval.add_argument("--directory", required=True, help="Enter where you want to access the code for your costum pipeline's directory")
 
+    # bojai list
+    parser_eval = subparsers.add_parser("list", help="List available pipelines or built ones")
+    parser_start.add_argument("--pipelines", action="store_true", help="list pre-built pipelines")
+    parser_start.add_argument("--builds", action="store_true", help="list built pipelines")
     args = parser.parse_args()
 
     if args.command == "start":
@@ -188,6 +205,9 @@ def main():
     
     elif args.command == "create":
         new_costum_model(args.model, args.directory)
+    elif args.command == "list":
+        list_pipelines(args.pipelines, args.builds)
+        
 
 if __name__ == "__main__":
     main()
