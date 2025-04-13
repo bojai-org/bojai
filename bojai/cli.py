@@ -51,7 +51,7 @@ def build_dir(model_name, directory, replace):
         print(f"Workspace '{model_name}' already exists. Set replace to true if you want to replace the model")
         return
 
-    os.makedirs(workspace_dir,  exist_ok=True)
+    os.makedirs(f"bm_{workspace_dir}",  exist_ok=True)
     print(f"{workspace_dir} directory created, now copying files")
 
     # Copy shared files
