@@ -161,31 +161,31 @@ def list_pipelines(pipelines, builds):
         
 
 def main():
-    parser = argparse.ArgumentParser(description="BojAi Command Line Interface")
+    parser = argparse.ArgumentParser(description="Vexor Command Line Interface")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    # bojai start
+    # vexor start
     parser_start = subparsers.add_parser("start", help="Start a model")
     parser_start.add_argument("--model", required=True, help="Model to start (e.g., get, summarizer)")
     parser_start.add_argument("--stage", type=str, default='all', help="Port to run the model on (default: 8080)")
     parser_start.add_argument("--ui", action="store_true", help="Start model using the UI instead of CLI")
-    # bojai init
+    # vexor init
     parser_init = subparsers.add_parser("build", help="Initialize a model workspace")
     parser_init.add_argument("--model", required=True, help="Model to initialize (e.g., get, summarizer)")
     parser_init.add_argument("--replace", required=False,type=str, default='false', help="Enter if you want to replace the model if it already exists")
     parser_init.add_argument("--directory", required=False,type=str, default='none', help="Enter where you stored the code for your costum model")
     
 
-    # bojai remove
+    # vexor remove
     parser_eval = subparsers.add_parser("remove", help="Remove a built model")
     parser_eval.add_argument("--model", required=True, help="Model to remove")
 
-    # bojai create
+    # vexor create
     parser_eval = subparsers.add_parser("create", help="Create a costum machine learning pipeline. Code your own processor, model, trainer, and deployer")
     parser_eval.add_argument("--model", required=True, help="give a name to your pipeline")
     parser_eval.add_argument("--directory", required=True, help="Enter where you want to access the code for your costum pipeline's directory")
 
-    # bojai list
+    # vexor list
     parser_eval = subparsers.add_parser("list", help="List available pipelines or built ones")
     parser_start.add_argument("--pipelines", action="store_true", help="list pre-built pipelines")
     parser_start.add_argument("--builds", action="store_true", help="list built pipelines")
