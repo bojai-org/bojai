@@ -29,7 +29,7 @@ def cli_instance():
         train_cls=lambda prep, hparams: "FAKE_TRAINER",
         train_cli_fn=lambda trainer: print("🚀 TRAIN CLI STARTED"),
         browse_dict={"type": 2},
-        hyperparams={"lr": 0.01}
+        hyperparams={"lr": 0.01},
     )
 
 
@@ -38,6 +38,7 @@ def simulate_input(monkeypatch):
     def _simulate(inputs):
         iterator = iter(inputs)
         monkeypatch.setattr(builtins, "input", lambda _: next(iterator))
+
     return _simulate
 
 

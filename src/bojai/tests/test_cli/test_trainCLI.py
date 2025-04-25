@@ -3,6 +3,7 @@ import pytest
 from trainCLI import BojaiTrainingCLI
 import sys
 
+
 class DummyTrainer:
     def __init__(self):
         self.trained = False
@@ -20,10 +21,11 @@ class DummyTrain:
     def __init__(self):
         self.model = type("DummyModel", (), {})()
         self.prep = type("Prep", (), {"device": "cpu", "data": "some_data"})()
-        self.trainerManager = type("Manager", (), {
-            "hyperparams": {"lr": 0.01, "epochs": 5},
-            "trainer": DummyTrainer()
-        })()
+        self.trainerManager = type(
+            "Manager",
+            (),
+            {"hyperparams": {"lr": 0.01, "epochs": 5}, "trainer": DummyTrainer()},
+        )()
 
     def edit_hyperparams(self, new_params):
         self.trainerManager.hyperparams = new_params
@@ -34,6 +36,7 @@ def simulate_input(monkeypatch):
     def _simulate(inputs):
         it = iter(inputs)
         monkeypatch.setattr(builtins, "input", lambda _: next(it))
+
     return _simulate
 
 
@@ -100,13 +103,14 @@ def test_deploy_after_training(cli_instance, simulate_input, monkeypatch, capsys
             print("🚀 Deploy created")
 
     monkeypatch.setattr("trainCLI.Deploy", DummyDeploy)
-    monkeypatch.setattr("trainCLI.deploy_cli", lambda deploy: print("📦 [deploy_cli called]"))
+    monkeypatch.setattr(
+        "trainCLI.deploy_cli", lambda deploy: print("📦 [deploy_cli called]")
+    )
 
     simulate_input(["t", "d", "q"])
     cli_instance.run()
     out = capsys.readouterr().out
     assert "📦 [deploy_cli called]" in out
-
 
 
 def test_invalid_choice(cli_instance, simulate_input, capsys):
@@ -125,11 +129,12 @@ def test_return_to_prepare(monkeypatch, simulate_input, capsys):
         def run(self):
             print("🔁 Mocked prepareCLI returned")
 
-    dummy_prepare_module = type("prepareCLI", (), {"BojaiPreparationCLI": lambda prep: DummyPrepRunner()})
+    dummy_prepare_module = type(
+        "prepareCLI", (), {"BojaiPreparationCLI": lambda prep: DummyPrepRunner()}
+    )
     monkeypatch.setitem(sys.modules, "prepareCLI", dummy_prepare_module)
 
     cli = BojaiTrainingCLI(train=DummyTrain())
     cli.run()
     out = capsys.readouterr().out
     assert "🔁 Mocked prepareCLI returned" in out
-

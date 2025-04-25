@@ -37,7 +37,7 @@ class BojaiTrainingCLI:
                 new_params[name] = old_val
             else:
                 try:
-                    new_params[name] = float(val) if '.' in val else int(val)
+                    new_params[name] = float(val) if "." in val else int(val)
                 except ValueError:
                     print(f"❌ Invalid value for {name}. Keeping old value.")
                     new_params[name] = old_val
@@ -57,6 +57,7 @@ class BojaiTrainingCLI:
         trainer = self.train.trainerManager.trainer
 
         try:
+
             class ProgressCallback:
                 def emit(self, progress):
                     print(f"🟣 Progress: {progress}%", end="\r")
@@ -85,7 +86,9 @@ class BojaiTrainingCLI:
 
     def replace_model(self):
         self.print_header("🔄 Replace Model")
-        confirm = input("Are you sure? This will reset your model. (y/n): ").strip().lower()
+        confirm = (
+            input("Are you sure? This will reset your model. (y/n): ").strip().lower()
+        )
         if confirm != "y":
             print("❌ Cancelled.")
             return
@@ -132,6 +135,7 @@ class BojaiTrainingCLI:
             elif choice == "p":
                 try:
                     from prepareCLI import BojaiPreparationCLI
+
                     print("🔁 Returning to data preparation CLI...")
                     BojaiPreparationCLI(self.train.prep).run()
                     print("✅ Returned to training stage.")

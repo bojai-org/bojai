@@ -1,5 +1,6 @@
 # prepareCLI.py
 
+
 class BojaiPreparationCLI:
     def __init__(
         self,
@@ -7,7 +8,7 @@ class BojaiPreparationCLI:
         train_cls=None,
         train_cli_fn=None,
         browse_dict=None,
-        hyperparams=None
+        hyperparams=None,
     ):
         self.prep = prep
         self.Train = train_cls or (lambda prep, hparams: "MockTrainObject")
@@ -30,7 +31,9 @@ class BojaiPreparationCLI:
 
     def view_tokenized_data(self):
         while True:
-            index = input("Enter index to view tokenized data (leave blank for a random data point, q to quit): ").strip()
+            index = input(
+                "Enter index to view tokenized data (leave blank for a random data point, q to quit): "
+            ).strip()
             if index == "q":
                 break
             try:
@@ -47,7 +50,9 @@ class BojaiPreparationCLI:
 
     def view_raw_data(self):
         while True:
-            index = input("Enter index to view raw data (leave blank for all, q to quit): ").strip()
+            index = input(
+                "Enter index to view raw data (leave blank for all, q to quit): "
+            ).strip()
             if index == "q":
                 break
             try:
@@ -77,7 +82,9 @@ class BojaiPreparationCLI:
             return
         try:
             self.prep.update_data(new_path)
-            print(f"✅ Data updated successfully. Total data points: {self.prep.num_data_points}")
+            print(
+                f"✅ Data updated successfully. Total data points: {self.prep.num_data_points}"
+            )
         except Exception as e:
             print(f"❌ Failed to update data: {str(e)}")
 

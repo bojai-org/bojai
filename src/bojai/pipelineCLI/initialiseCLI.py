@@ -5,6 +5,7 @@ from prepare import Prepare
 from global_vars import browseDict, getNewModel, getNewTokenizer, task_type, options
 from prepareCLI import prepare_cli
 
+
 def prompt_input(prompt_text, cast_type=str, allow_blank=False):
     while True:
         value = input(prompt_text).strip()
@@ -16,11 +17,13 @@ def prompt_input(prompt_text, cast_type=str, allow_blank=False):
         except ValueError:
             print(f"❌ Invalid input. Please enter a {cast_type.__name__}.")
 
+
 def data_preparation_stage_cli(prep):
     print("\n────────────────────────────────────")
     print("📁 Entering Data Preparation Stage")
     print("────────────────────────────────────")
     prepare_cli(prep)
+
 
 def initialize_pipeline_cli():
     print("📦 Welcome to Bojai CLI Initializer")
@@ -70,7 +73,16 @@ def initialize_pipeline_cli():
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        prep = Prepare(model_name, model, device, tokenizer, data_address, task_type, (train_split, eval_split), ',')
+        prep = Prepare(
+            model_name,
+            model,
+            device,
+            tokenizer,
+            data_address,
+            task_type,
+            (train_split, eval_split),
+            ",",
+        )
     except Exception as e:
         print(f"❌ Error initializing pipeline: {str(e)}")
         return
@@ -85,11 +97,16 @@ def initialize_pipeline_cli():
     print("────────────────────────────────────\n")
 
     # Offer option to move to the data preparation stage
-    choice = input("Type 'p' to proceed with data preparation, or any other key to exit: ").strip().lower()
+    choice = (
+        input("Type 'p' to proceed with data preparation, or any other key to exit: ")
+        .strip()
+        .lower()
+    )
     if choice == "p":
         data_preparation_stage_cli(prep)
     else:
         print("Exiting Bojai CLI. Goodbye!")
+
 
 if __name__ == "__main__":
     initialize_pipeline_cli()

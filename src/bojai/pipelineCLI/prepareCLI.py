@@ -1,14 +1,22 @@
 import torch
 from prepare import Prepare
-from global_vars import browseDict, getNewModel, getNewTokenizer, task_type, hyper_params
+from global_vars import (
+    browseDict,
+    getNewModel,
+    getNewTokenizer,
+    task_type,
+    hyper_params,
+)
 from train import Train
 from trainCLI import train_cli
 import sys
+
 
 def print_header(title):
     print("\n" + "=" * 60)
     print(f"{title}")
     print("=" * 60)
+
 
 def display_pipeline_info(prep: Prepare):
     print_header("📄 Pipeline Information")
@@ -18,9 +26,12 @@ def display_pipeline_info(prep: Prepare):
     print(f"📈 Data Points       : {prep.num_data_points}")
     print(f"✅ Prep Ready?       : {'Yes' if prep.prep_ready else 'No'}")
 
+
 def view_tokenized_data(prep: Prepare):
     while True:
-        index = input("Enter index to view tokenized data (leave blank for a random data point, q to quit): ").strip()
+        index = input(
+            "Enter index to view tokenized data (leave blank for a random data point, q to quit): "
+        ).strip()
         if index == "q":
             break
         try:
@@ -35,9 +46,12 @@ def view_tokenized_data(prep: Prepare):
         except Exception as e:
             print(f"❌ Error: {str(e)}")
 
+
 def view_raw_data(prep: Prepare):
     while True:
-        index = input("Enter index to view raw data (leave blank for all, q to quit): ").strip()
+        index = input(
+            "Enter index to view raw data (leave blank for all, q to quit): "
+        ).strip()
         if index == "q":
             break
         try:
@@ -60,6 +74,7 @@ def view_raw_data(prep: Prepare):
         except Exception as e:
             print(f"❌ Error: {str(e)}")
 
+
 def update_data_path(prep: Prepare):
     new_path = input("Enter new dataset address: ").strip()
     if not new_path:
@@ -67,7 +82,9 @@ def update_data_path(prep: Prepare):
         return
     try:
         prep.update_data(new_path)
-        print(f"✅ Data updated successfully. Total data points: {prep.num_data_points}")
+        print(
+            f"✅ Data updated successfully. Total data points: {prep.num_data_points}"
+        )
     except Exception as e:
         print(f"❌ Failed to update data: {str(e)}")
 
@@ -78,7 +95,8 @@ def do_training(prep: Prepare):
         print("🧠 Launching training CLI...")
         train_cli(train)
     except Exception as e:
-        print(f"❌ Failed to launch training: {str(e)}") 
+        print(f"❌ Failed to launch training: {str(e)}")
+
 
 def prepare_cli(prep: Prepare):
     print_header("🔧 Bojai Data Preparation CLI")
@@ -112,6 +130,7 @@ def prepare_cli(prep: Prepare):
         else:
             print("❌ Invalid option. Try again.")
 
+
 # Example usage entry point
 if __name__ == "__main__":
     model_name = input("Enter model name: ")
@@ -121,6 +140,15 @@ if __name__ == "__main__":
     tokenizer = getNewTokenizer()
     model = getNewModel()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    prep = Prepare(model_name, model, device, tokenizer, data_address, task_type, (training_div, eval_div), ',')
+    prep = Prepare(
+        model_name,
+        model,
+        device,
+        tokenizer,
+        data_address,
+        task_type,
+        (training_div, eval_div),
+        ",",
+    )
 
     prepare_cli(prep)

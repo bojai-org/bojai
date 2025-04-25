@@ -5,8 +5,9 @@ from torch.utils.data import Dataset
 import numpy as np
 from PIL import Image
 
-#manages which data processor to use, used by the prep stage
-class ProcessorManager():
+
+# manages which data processor to use, used by the prep stage
+class ProcessorManager:
     def __init__(self, data_dir, division, model, device, tokenizer, task_type):
         self.data_dir = data_dir
         self.division = division
@@ -15,17 +16,32 @@ class ProcessorManager():
         self.device = device
         self.processor = None
         self.decide_which_processor(task_type)
-    
+
     def decide_which_processor(self, task_type):
-        if task_type == 'cli': 
-            self.processor = ProcessorCLI(self.data_dir, self.division, self.model, self.device, self.tokenizer)
-            self.train = ProcessorCLI(self.processor.train_dir, [1,0], self.model, self.device, self.tokenizer,False)
-            self.eval = ProcessorCLI(self.processor.eval_dir, [0,1], self.model, self.device, self.tokenizer, False)
-    
+        if task_type == "cli":
+            self.processor = ProcessorCLI(
+                self.data_dir, self.division, self.model, self.device, self.tokenizer
+            )
+            self.train = ProcessorCLI(
+                self.processor.train_dir,
+                [1, 0],
+                self.model,
+                self.device,
+                self.tokenizer,
+                False,
+            )
+            self.eval = ProcessorCLI(
+                self.processor.eval_dir,
+                [0, 1],
+                self.model,
+                self.device,
+                self.tokenizer,
+                False,
+            )
 
 
-#abstract class serving as the base for the other types of processors. 
-#The classes extending it should: 
+# abstract class serving as the base for the other types of processors.
+# The classes extending it should:
 # - should split data
 # - be able to accept some ops on data if they process numbers
 # - should tokenize data
@@ -39,7 +55,12 @@ class Processor(ABC):
         self.tokenizer = tokenizer
         self.model = model
         self.device = device
-        self.inputs_train, self.inputs_eval, self.outputs_train, self.outputs_eval = None, None, None,None
+        self.inputs_train, self.inputs_eval, self.outputs_train, self.outputs_eval = (
+            None,
+            None,
+            None,
+            None,
+        )
 
     @abstractmethod
     def __len__(self):
@@ -50,39 +71,46 @@ class Processor(ABC):
         pass
 
     @abstractmethod
-    def get_item_untokenized(self,idx):
+    def get_item_untokenized(self, idx):
         pass
 
 
-
 class ProcessorCLI(Processor, Dataset):
-    def __init__(self, data_dir, division, model, device, tokenizer, main = True):
+    def __init__(self, data_dir, division, model, device, tokenizer, main=True):
         super().__init__(data_dir, division, model, device, tokenizer)
         self.images, self.labels = self.get_inputs_outputs()
         train, eval = division
-        if train + eval != 1: 
+        if train + eval != 1:
             raise ValueError("the division must add to 1")
         if main:
-            self.inputs_train, self.inputs_eval, self.outputs_train, self.outputs_eval = self.divide()
+            (
+                self.inputs_train,
+                self.inputs_eval,
+                self.outputs_train,
+                self.outputs_eval,
+            ) = self.divide()
             self.train_dir, self.eval_dir = self.get_eval_train()
-    
+
     def get_inputs_outputs(self):
         images = []
-        image_dir = os.path.join(self.data_dir, 'input')
+        image_dir = os.path.join(self.data_dir, "input")
         for filename in os.listdir(image_dir):
-            if filename.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff")):
-                img_path = os.path.join(image_dir, filename) 
+            if filename.lower().endswith(
+                (".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tiff")
+            ):
+                img_path = os.path.join(image_dir, filename)
                 img = Image.open(img_path)
-                images.append(img)  
-            else: 
+                images.append(img)
+            else:
                 raise ValueError("All data in input directory must be images")
 
-        outputs_file = os.path.join(self.data_dir, 'output.txt')
-        with open(outputs_file, 'r', encoding='utf-8') as f:
+        outputs_file = os.path.join(self.data_dir, "output.txt")
+        with open(outputs_file, "r", encoding="utf-8") as f:
             outputs = f.readlines()
         outputs = [int(line.strip()) for line in outputs]
 
-        return images, outputs   
+        return images, outputs
+
     def divide(self):
         # Determine the indices for splitting
         num_samples = len(self.labels)
@@ -105,48 +133,47 @@ class ProcessorCLI(Processor, Dataset):
         img_array = np.array(img)
         # Convert the NumPy array to a PyTorch tensor
         # The shape of the image_array will be (H, W, 3), so we need to transpose it to (3, H, W)
-        img_tensor = torch.tensor(img_array).permute(2, 0, 1).float()  # Convert to float for neural network processing
+        img_tensor = (
+            torch.tensor(img_array).permute(2, 0, 1).float()
+        )  # Convert to float for neural network processing
 
         # Normalize the tensor (optional)
         img_tensor = img_tensor / 255.0  # Scaling the pixel values to the range [0, 1]
 
         return img_tensor, self.labels[idx]
 
-
     def __len__(self):
         return len(self.labels)
-    
 
-    def get_item_untokenized(self,idx):
+    def get_item_untokenized(self, idx):
         return self.images[idx], self.labels[idx]
-    
 
-        #returns the divided data, for evalaution and training
+        # returns the divided data, for evalaution and training
+
     def get_eval_train(self):
-        os.makedirs('train_dir', exist_ok=True)
-        os.makedirs('eval_dir', exist_ok=True)
+        os.makedirs("train_dir", exist_ok=True)
+        os.makedirs("eval_dir", exist_ok=True)
 
         # Save train data to text files
-        self.save_to_file_image(os.path.join('train_dir', "input"), self.inputs_train)
-        self.save_to_file(os.path.join('train_dir', "output.txt"), self.outputs_train)
+        self.save_to_file_image(os.path.join("train_dir", "input"), self.inputs_train)
+        self.save_to_file(os.path.join("train_dir", "output.txt"), self.outputs_train)
 
         # Save evaluation data to text files
-        self.save_to_file_image(os.path.join('eval_dir', "input"), self.inputs_eval)
-        self.save_to_file(os.path.join('eval_dir', "output.txt"), self.outputs_eval)
+        self.save_to_file_image(os.path.join("eval_dir", "input"), self.inputs_eval)
+        self.save_to_file(os.path.join("eval_dir", "output.txt"), self.outputs_eval)
 
-        return 'train_dir', 'eval_dir'
-    
-    #Helper function to write a list to a file, one sentence per line.
+        return "train_dir", "eval_dir"
+
+    # Helper function to write a list to a file, one sentence per line.
     def save_to_file(self, file_path, data_list):
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             for sentence in data_list:
                 f.write(str(sentence) + "\n")
-    
+
     def save_to_file_image(self, file_path, data_list):
         if not os.path.exists(file_path):
             os.makedirs(file_path)  # Create directory if it doesn't exist
 
         for i, img in enumerate(data_list, start=1):
             dir_path = os.path.join(file_path, f"{i}.jpg")  # Save as .jpg
-            img.save(dir_path, format="JPEG")   # You can change format to PNG if needed
-        
+            img.save(dir_path, format="JPEG")  # You can change format to PNG if needed

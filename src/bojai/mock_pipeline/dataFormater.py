@@ -1,11 +1,11 @@
 # ───────────────────────────────────────────────────────────────────────────────
 # dataFormatManager: Optional adapter to reformat data directories into a usable format
 # ───────────────────────────────────────────────────────────────────────────────
-'''
+"""
 📦 What is this?
 ────────────────
-`dataFormatManager` is an *optional plug-in* used to reformat user-provided data into a format your pipeline understands. 
-It is optional and no need to touch it if you are sure the users of your pipeline will have the expected data format. 
+`dataFormatManager` is an *optional plug-in* used to reformat user-provided data into a format your pipeline understands.
+It is optional and no need to touch it if you are sure the users of your pipeline will have the expected data format.
 
 Imagine a user gives you:
 - XML files instead of CSV
@@ -23,25 +23,26 @@ You define:
 - Optionally, how to convert from one to another
 
 🎯 Goal: Let users bring "messy" data — you silently clean it up for them.
-'''
+"""
 
-class dataFormatManager():
+
+class dataFormatManager:
     def __init__(self):
         # Define expected formats per model/task
         self.all_mappings = self.get_all()
 
         # Store the final usable path after any reformatting
-        self.data_dir = ''
+        self.data_dir = ""
 
     def __call__(self, task: str, data_dir: str, data_sep: str):
-        '''
+        """
         This allows the manager to be called like a function:
             formatter(task_type, "path/to/data", ",")
-        '''
+        """
         self.process(task, data_dir, data_sep)
 
     def process(self, task, data_dir, data_sep):
-        '''
+        """
         1. Looks up what data format is expected for the given task.
         2. Uses get_dir_type() to determine what format the provided data actually is.
         3. If they match, great — continue.
@@ -51,7 +52,7 @@ class dataFormatManager():
         - Call formatters (like XML→CSV converters)
         - Clean filenames
         - Flatten directory structures
-        '''
+        """
         expected = self.all_mappings[task]
         actual = self.get_dir_type(task, data_dir)
 
@@ -67,7 +68,7 @@ class dataFormatManager():
         # Optionally: Add reformatting logic here if actual != expected
 
     def get_all(self):
-        '''
+        """
         🗺️ Define expected format labels for each model/pipeline/task.
         These are just strings — they can mean anything you want (e.g., 'csv', 'xml', 'foldered-images')
 
@@ -77,11 +78,11 @@ class dataFormatManager():
                 "digit_classifier": "flat_image_dir",
                 "my_custom_pipeline": "jsonl"
             }
-        '''
-        return {'@TODO your-model-name': '@TODO give some name to data format'}
+        """
+        return {"@TODO your-model-name": "@TODO give some name to data format"}
 
     def get_dir_type(self, task, data_dir):
-        '''
+        """
         🕵️‍♂️ Inspect the provided data_dir and guess what kind of data it contains.
 
         This is 100% customizable — implement whatever logic fits your needs.
@@ -95,5 +96,5 @@ class dataFormatManager():
 
         NOTE: You do NOT have to implement this.
         If you don’t use the formatter, Bojai will just use raw data as-is.
-        '''
-        self.data_dir = data_dir 
+        """
+        self.data_dir = data_dir

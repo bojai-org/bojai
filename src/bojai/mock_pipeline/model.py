@@ -1,4 +1,4 @@
-'''
+"""
 This is your custom model file.
 
 ✅ You are free to use ANY architecture here:
@@ -10,7 +10,8 @@ There are NO base classes, NO requirements, and NO restrictions.
 Just make sure the object you define here can be passed to your trainer class.
 
 👇 Example of a flexible placeholder model:
-'''
+"""
+
 
 class YourModel:
     def __init__(self):
@@ -40,9 +41,10 @@ class YourModel:
         """
         pass
 
-'''
+
+"""
 You’ll use this model object in:
 - train.py for training and evaluation
 - deploy.py for inference
 You can modify it however you want.
-'''
+"""

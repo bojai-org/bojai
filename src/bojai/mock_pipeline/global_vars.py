@@ -8,31 +8,31 @@ It defines:
 - Optional external validation APIs
 """
 
-
 # 🧠 Task Identifier
-task_type = 'gegt'
+task_type = "gegt"
 
 # 🔧 Training Configuration
 hyper_params = {
-    'batch_size': 32,
-    'learning_rate': 1e-5,
-    'num_epochs': 1,
-    'num_workers': 0
+    "batch_size": 32,
+    "learning_rate": 1e-5,
+    "num_epochs": 1,
+    "num_workers": 0,
 }
 
 # 🎛️ Controls for UI and CLI behavior
 browseDict = {
-    'train': False,                # Does the training tab need a file browser?
-    'prep': False,                 # Does the prepare tab need a browser?
-    'deploy_new_data': False,     # Does the deploy tab take new data from a browser?
-    'use_model_upload': True,     # Does the model take a file input from user?
-    'use_model_text': "Enter one picture to see output",  # Label in UI
-    'init': False,                # Whether to call init_model before training
-    'type': 0,                    # 0=image, 1=voice, 2=text/numbers
-    'eval_matrice': 'perplexity',# Evaluation metric to show in UI
-    'options': 0,                 # Whether the user needs to select from options
-    'options-where': -1           # Where options are applied: -1=nowhere, 0=tokenizer, 1=model
+    "train": False,  # Does the training tab need a file browser?
+    "prep": False,  # Does the prepare tab need a browser?
+    "deploy_new_data": False,  # Does the deploy tab take new data from a browser?
+    "use_model_upload": True,  # Does the model take a file input from user?
+    "use_model_text": "Enter one picture to see output",  # Label in UI
+    "init": False,  # Whether to call init_model before training
+    "type": 0,  # 0=image, 1=voice, 2=text/numbers
+    "eval_matrice": "perplexity",  # Evaluation metric to show in UI
+    "options": 0,  # Whether the user needs to select from options
+    "options-where": -1,  # Where options are applied: -1=nowhere, 0=tokenizer, 1=model
 }
+
 
 # 🧠 Load Tokenizers
 def getNewTokenizer():
@@ -42,6 +42,7 @@ def getNewTokenizer():
     """
     pass
 
+
 # 🧠 Load Model
 def getNewModel():
     """
@@ -49,6 +50,7 @@ def getNewModel():
     You can access tokenizers via getNewTokenizer() if needed for dimensions.
     """
     pass
+
 
 # 🛠 Model Initialization Hook
 # Only used if your model needs access to the dataset or hyperparameters to be fully initialized.
@@ -79,6 +81,7 @@ def init_model(data, model, hyper_params):
 class ObjectOfOption:
     pass
 
-#options for tokenization or model selection. If you want to use this make sure to turn it on in browseDict dictionary. 
 
-options = {"name of option" : ObjectOfOption}
+# options for tokenization or model selection. If you want to use this make sure to turn it on in browseDict dictionary.
+
+options = {"name of option": ObjectOfOption}

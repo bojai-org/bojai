@@ -2,12 +2,14 @@ import builtins
 import pytest
 from deployCLI import BojaiDeployCLI
 
+
 class DummyTrainer:
     def __init__(self):
-        self.model = type("FakeModel", (), {
-            "state_dict": lambda self: {"weights": [1, 2, 3]}
-        })()
+        self.model = type(
+            "FakeModel", (), {"state_dict": lambda self: {"weights": [1, 2, 3]}}
+        )()
         self.prep = "prep_obj"
+
 
 class DummyDeploy:
     def __init__(self):
@@ -26,19 +28,22 @@ class DummyDeploy:
     def use_model(self, text_input):
         return f"ModelOutput({text_input})"
 
+
 @pytest.fixture
 def cli_instance():
     return BojaiDeployCLI(
         deploy=DummyDeploy(),
         train_cli_fn=lambda train: print("✅ Training CLI"),
-        prepare_cli_fn=lambda prep: print("✅ Prepare CLI")
+        prepare_cli_fn=lambda prep: print("✅ Prepare CLI"),
     )
+
 
 @pytest.fixture
 def simulate_input(monkeypatch):
     def _simulate(inputs):
         it = iter(inputs)
         monkeypatch.setattr(builtins, "input", lambda _: next(it))
+
     return _simulate
 
 
@@ -73,9 +78,10 @@ def test_use_model(cli_instance, simulate_input, capsys):
 
 
 def test_save_model(monkeypatch, cli_instance, simulate_input, capsys):
-    monkeypatch.setattr("deployCLI.torch", type("torch", (), {
-        "save": lambda obj, path: print(f"[torch.save to {path}]")
-    }))
+    monkeypatch.setattr(
+        "deployCLI.torch",
+        type("torch", (), {"save": lambda obj, path: print(f"[torch.save to {path}]")}),
+    )
     simulate_input(["s", "/models", "q"])
     cli_instance.run()
     out = capsys.readouterr().out

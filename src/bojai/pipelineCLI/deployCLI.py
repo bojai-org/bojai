@@ -1,13 +1,21 @@
 import os
 import torch
-from global_vars import browseDict, getNewModel, getNewTokenizer, hyper_params, task_type
+from global_vars import (
+    browseDict,
+    getNewModel,
+    getNewTokenizer,
+    hyper_params,
+    task_type,
+)
 from deploy import Deploy
 import sys
+
 
 def print_header(title):
     print("\n" + "=" * 60)
     print(f"{title}")
     print("=" * 60)
+
 
 def update_eval_data_cli(deploy):
     print_header("📂 Add New Evaluation Data")
@@ -21,6 +29,7 @@ def update_eval_data_cli(deploy):
     except Exception as e:
         print(f"❌ Error: {str(e)}")
 
+
 def evaluate_original_data(deploy):
     print_header("📈 Evaluate Model on Original Data")
     try:
@@ -28,6 +37,7 @@ def evaluate_original_data(deploy):
         print(f"✅ {browseDict['eval_matrice']}: {score}")
     except Exception as e:
         print(f"❌ Failed to evaluate: {str(e)}")
+
 
 def evaluate_new_data(deploy):
     if deploy.new_data is None:
@@ -40,6 +50,7 @@ def evaluate_new_data(deploy):
     except Exception as e:
         print(f"❌ Failed to evaluate: {str(e)}")
 
+
 def use_model_cli(deploy):
     print_header("🧠 Use Model for Inference")
     text_input = input(f"{browseDict['use_model_text']}\n> ").strip()
@@ -49,6 +60,7 @@ def use_model_cli(deploy):
         print(f"✅ Output: {output}")
     except Exception as e:
         print(f"❌ Inference failed: {str(e)}")
+
 
 def save_model_cli(deploy):
     print_header("💾 Save Model")
@@ -64,7 +76,8 @@ def save_model_cli(deploy):
     except Exception as e:
         print(f"❌ Error saving model: {str(e)}")
 
-def deploy_cli(deploy : Deploy):
+
+def deploy_cli(deploy: Deploy):
     from trainCLI import train_cli
     from prepareCLI import prepare_cli
 
@@ -108,10 +121,10 @@ def deploy_cli(deploy : Deploy):
             print("❌ Invalid choice.")
 
 
-
 if __name__ == "__main__":
     from prepare import Prepare
     from train import Train
+
     model_name = ""
     data_address = input("enter dataset address: ")
     training_div = 0.8
@@ -119,8 +132,17 @@ if __name__ == "__main__":
     tokenizer = getNewTokenizer()
     model = getNewModel()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    prep = Prepare(model_name, model, device, tokenizer, data_address, task_type, (training_div, eval_div), '')
+    prep = Prepare(
+        model_name,
+        model,
+        device,
+        tokenizer,
+        data_address,
+        task_type,
+        (training_div, eval_div),
+        "",
+    )
     hyperparams = hyper_params
-    train = Train(prep, hyperparams)  
+    train = Train(prep, hyperparams)
     deploy = Deploy(train, 100)
     deploy_cli(deploy)

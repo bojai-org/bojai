@@ -3,28 +3,29 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 
-#decides which trainer to use, depending on the task. Used by the train stage
+
+# decides which trainer to use, depending on the task. Used by the train stage
 class TrainingManager:
-    def __init__(self, task_type, model, eval, training, device, tokenizer, hyper_params: dict):
+    def __init__(
+        self, task_type, model, eval, training, device, tokenizer, hyper_params: dict
+    ):
         self.trainer: Trainer = None
         self.initiated = False
         self.task_type = task_type
-        self.model = model 
+        self.model = model
         self.eval = eval
         self.training = training
         self.device = device
         self.tokenizer = tokenizer
         self.hyperparams = hyper_params
 
-
-
     def initialise(self):
         self.start_model()
         self.initiated = True
-    
+
     def start_model(self):
         required_keys = self.get_required_hyperparams(self.task_type)
-        if self.task_type == 'cln':
+        if self.task_type == "cln":
             # Validate and extract required hyperparameters
             missing_keys = [key for key in required_keys if key not in self.hyperparams]
             if missing_keys:
@@ -34,30 +35,36 @@ class TrainingManager:
             seq2seqhyper_params = {key: self.hyperparams[key] for key in required_keys}
 
             # Now pass the validated hyperparameters to TrainerSeq2Seq
-            self.trainer = TrainerCLN(self.model, self.training, self.eval, self.device, self.tokenizer, seq2seqhyper_params)
+            self.trainer = TrainerCLN(
+                self.model,
+                self.training,
+                self.eval,
+                self.device,
+                self.tokenizer,
+                seq2seqhyper_params,
+            )
 
     def get_required_hyperparams(self, task_type):
         # Define required hyperparameters based on task_type
-        if task_type == 'cln':
-            return ['learning_rate']
+        if task_type == "cln":
+            return ["learning_rate"]
         else:
             raise ValueError(f"Unsupported task type: {task_type}")
-    
-    def edit_hyper_params(self, new_hyperparams : dict):
+
+    def edit_hyper_params(self, new_hyperparams: dict):
         self.hyperparams = new_hyperparams
         self.start_model()
 
-            
 
-#abstract class that is used as ab ase for other trainers. It dynamically assigns the hyper-params 
-# Each Model must come with a required hyper-params set added to the manager above.         
+# abstract class that is used as ab ase for other trainers. It dynamically assigns the hyper-params
+# Each Model must come with a required hyper-params set added to the manager above.
 class Trainer(ABC):
-    def __init__(self, model, device, tokenizer, hyper_params : dict):
+    def __init__(self, model, device, tokenizer, hyper_params: dict):
         super().__init__()
         # Dynamically assign each hyperparameter as an instance attribute
         for key, value in hyper_params.items():
             setattr(self, key, value)
-        self.model = model 
+        self.model = model
         self.device = device
         self.tokenizer = tokenizer
         self.hyper_params = hyper_params.keys()
@@ -67,45 +74,48 @@ class Trainer(ABC):
         pass
 
     @abstractmethod
-    def evaluate(self, eval_dataset = None):
+    def evaluate(self, eval_dataset=None):
         pass
 
-#trainer for fine-tuning, used in GET medium and large. uses cross-entropy loss and Adam optimizer. Uses perplexity as eval metrice. 
-class TrainerCLN(Trainer): 
-    def __init__(self, model, train_dataset, eval_dataset, device, tokenizer, hyperparams):
+
+# trainer for fine-tuning, used in GET medium and large. uses cross-entropy loss and Adam optimizer. Uses perplexity as eval metrice.
+class TrainerCLN(Trainer):
+    def __init__(
+        self, model, train_dataset, eval_dataset, device, tokenizer, hyperparams
+    ):
         super().__init__(model, device, tokenizer, hyperparams)
-        
+
         self.train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
         self.val_loader = DataLoader(eval_dataset, batch_size=1, shuffle=False)
         self.loss_fn = nn.BCELoss()
         self.optimizer = torch.optim.SGD(model.parameters(), lr=self.learning_rate)
 
-    def train(self, qthread = None , progress_updated = None, loss_updated = None):
+    def train(self, qthread=None, progress_updated=None, loss_updated=None):
         self.num_batches = len(self.train_loader)  # Ensure correct batch count
         total_steps = len(self.train_loader)
         current_step = 0  # Track progress
         total_loss = 0
         # forward pass and loss
         for x, y in self.train_loader:
-                y_predicted = self.model(x)
-                y = y.unsqueeze(1) 
-                y = y.to(torch.float32) 
-                loss = self.loss_fn(y_predicted, y)
-                total_loss += loss.item()
-                
-                # backward pass
-                loss.backward()
-                
-                # updates
-                self.optimizer.step()
+            y_predicted = self.model(x)
+            y = y.unsqueeze(1)
+            y = y.to(torch.float32)
+            loss = self.loss_fn(y_predicted, y)
+            total_loss += loss.item()
 
-                current_step += 1
-                progress = int((current_step / total_steps) * 100)
-                progress_updated.emit(progress)  # Emit signal to UI
-                qthread.msleep(1)  # Allow UI to refresh
-                print('done one')
-                
-            # Print average loss for the epoch
+            # backward pass
+            loss.backward()
+
+            # updates
+            self.optimizer.step()
+
+            current_step += 1
+            progress = int((current_step / total_steps) * 100)
+            progress_updated.emit(progress)  # Emit signal to UI
+            qthread.msleep(1)  # Allow UI to refresh
+            print("done one")
+
+        # Print average loss for the epoch
         avg_loss = total_loss / len(self.train_loader)
         loss_updated.emit(avg_loss)
 
@@ -122,12 +132,11 @@ class TrainerCLN(Trainer):
         with torch.no_grad():  # Disable gradient calculations during evaluation
             for x, y in val_loader:
                 outputs = self.model(x)
-                y = y.unsqueeze(1) 
-                y = y.to(torch.float32) 
+                y = y.unsqueeze(1)
+                y = y.to(torch.float32)
                 if torch.equal(y, torch.round(outputs)):
-                    total_loss+=1
-                num +=1
+                    total_loss += 1
+                num += 1
 
-        #return loss
-        return total_loss/num
-
+        # return loss
+        return total_loss / num

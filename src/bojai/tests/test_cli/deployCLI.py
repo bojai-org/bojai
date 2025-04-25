@@ -2,10 +2,7 @@
 
 # === MOCKABLE PLACEHOLDERS ===
 torch = type("torch", (), {"save": lambda obj, path: print(f"[torch.save] {path}")})
-browseDict = {
-    "eval_matrice": "Accuracy",
-    "use_model_text": "Enter input for model:"
-}
+browseDict = {"eval_matrice": "Accuracy", "use_model_text": "Enter input for model:"}
 getNewModel = lambda: "MockModel"
 getNewTokenizer = lambda: "MockTokenizer"
 
@@ -14,7 +11,9 @@ class BojaiDeployCLI:
     def __init__(self, deploy, train_cli_fn=None, prepare_cli_fn=None):
         self.deploy = deploy
         self.train_cli = train_cli_fn or (lambda train: print("📦 [train_cli called]"))
-        self.prepare_cli = prepare_cli_fn or (lambda prep: print("📦 [prepare_cli called]"))
+        self.prepare_cli = prepare_cli_fn or (
+            lambda prep: print("📦 [prepare_cli called]")
+        )
 
     def print_header(self, title):
         print("\n" + "=" * 60)

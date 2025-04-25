@@ -1,13 +1,24 @@
 import argparse
 import os
 
+
 # TEMP PLACEHOLDERS (these get mocked in tests)
-def getNewModel(): pass
-def getNewTokenizer(): pass
-def prepare_cli(prep): pass
+def getNewModel():
+    pass
+
+
+def getNewTokenizer():
+    pass
+
+
+def prepare_cli(prep):
+    pass
+
+
 browseDict = {"options": 0, "options-where": 0}
 options = {"bert": lambda: "TokenizerInstance"}
 task_type = "classification"
+
 
 def prompt_input(prompt_text, cast_type=str, allow_blank=False):
     while True:
@@ -20,11 +31,13 @@ def prompt_input(prompt_text, cast_type=str, allow_blank=False):
         except ValueError:
             print(f"❌ Invalid input. Please enter a {cast_type.__name__}.")
 
+
 def data_preparation_stage_cli(prep):
     print("\n────────────────────────────────────")
     print("📁 Entering Data Preparation Stage")
     print("────────────────────────────────────")
     prepare_cli(prep)
+
 
 def initialize_pipeline_cli():
     print("📦 Welcome to Bojai CLI Initializer")
@@ -86,11 +99,16 @@ def initialize_pipeline_cli():
     print(f"Tokenizer        : {architecture if architecture else 'Default'}")
     print("────────────────────────────────────\n")
 
-    choice = input("Type 'p' to proceed with data preparation, or any other key to exit: ").strip().lower()
+    choice = (
+        input("Type 'p' to proceed with data preparation, or any other key to exit: ")
+        .strip()
+        .lower()
+    )
     if choice == "p":
         data_preparation_stage_cli(prep)
     else:
         print("Exiting Bojai CLI. Goodbye!")
+
 
 if __name__ == "__main__":
     initialize_pipeline_cli()

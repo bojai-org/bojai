@@ -3,24 +3,27 @@ import torch
 from torch import nn
 import numpy as np
 
-#an abstract model used as a base for other models
-class Model(ABC): 
+
+# an abstract model used as a base for other models
+class Model(ABC):
     def __init__(self):
         super().__init__()
 
-#a logistic regression model. Used for small and medium CLN, could be use for Large 
+
+# a logistic regression model. Used for small and medium CLN, could be use for Large
 class LogisticRegressionCLN(Model, nn.Module):
     def __init__(self):
         super(LogisticRegressionCLN, self).__init__()
         self.linear = None
-    
+
     def initialise(self, d):
         self.linear = nn.Linear(d, 1)
 
-    def forward(self, x): #x is of size n*d
-        x = x.to(torch.float32) 
+    def forward(self, x):  # x is of size n*d
+        x = x.to(torch.float32)
         y_predicted = torch.sigmoid(self.linear(x))
         return y_predicted, 0
+
 
 ## single-layer neural network for number binary classification
 class NeuralNetworkCLN(Model, nn.Module):
@@ -37,7 +40,7 @@ class NeuralNetworkCLN(Model, nn.Module):
         self.output_layer = nn.Linear(hidden_size, 1)
 
     def forward(self, input):
-        x = input.to(torch.float32) 
+        x = input.to(torch.float32)
         output = self.linear(x)
         output = self.relu(output)
         y_predicted = self.sigmoid(self.output_layer(output))
@@ -57,16 +60,16 @@ class DeepNeuralNetworkCLN(Model, nn.Module):
     def initialise(self, d):
         hidden_size = decide_hs(d)
         self.model = nn.Sequential(
-            nn.Linear(d, hidden_size), 
+            nn.Linear(d, hidden_size),
             nn.ReLU(),
             nn.Linear(hidden_size, hidden_size),
-            nn.ReLU(), 
-            nn.Linear(hidden_size, 1), 
-            nn.Sigmoid()
+            nn.ReLU(),
+            nn.Linear(hidden_size, 1),
+            nn.Sigmoid(),
         )
-        
+
     def forward(self, input):
-        y_predicted = self.model(input.to(torch.float32) )
+        y_predicted = self.model(input.to(torch.float32))
         return y_predicted, 0
 
 
@@ -84,12 +87,13 @@ class NeuralNetworkCLNL2(Model, nn.Module):
         self.output_layer = nn.Linear(hidden_size, 1)
 
     def forward(self, input):
-        x = input.to(torch.float32) 
+        x = input.to(torch.float32)
         output = self.linear(x)
         output = self.relu(output)
         y_predicted = self.sigmoid(self.output_layer(output))
         l2_penalty = sum(torch.norm(param, p=2) ** 2 for param in self.parameters())
         return y_predicted, l2_penalty
+
 
 class NeuralNetworkCLNL1(Model, nn.Module):
     def __init__(self):
@@ -101,16 +105,17 @@ class NeuralNetworkCLNL1(Model, nn.Module):
 
     def initialise(self, d):
         hidden_size = decide_hs(d)
-        self.linear = nn.Linear(d, hidden_size) 
+        self.linear = nn.Linear(d, hidden_size)
         self.output_layer = nn.Linear(hidden_size, 1)
 
     def forward(self, input):
-        x = input.to(torch.float32) 
+        x = input.to(torch.float32)
         output = self.linear(x)
         output = self.relu(output)
         y_predicted = self.sigmoid(self.output_layer(output))
         l1_penalty = sum(torch.abs(param).sum() for param in self.parameters())
         return y_predicted, l1_penalty
+
 
 class NeuralNetworkCLNElasticNet(Model, nn.Module):
     def __init__(self):
@@ -122,17 +127,18 @@ class NeuralNetworkCLNElasticNet(Model, nn.Module):
 
     def initialise(self, d):
         hidden_size = decide_hs(d)
-        self.linear = nn.Linear(d, hidden_size) 
+        self.linear = nn.Linear(d, hidden_size)
         self.output_layer = nn.Linear(hidden_size, 1)
 
     def forward(self, input):
-        x = input.to(torch.float32) 
+        x = input.to(torch.float32)
         output = self.linear(x)
         output = self.relu(output)
         y_predicted = self.sigmoid(self.output_layer(output))
         l1_penalty = sum(torch.abs(param).sum() for param in self.parameters())
         l2_penalty = sum(torch.norm(param, p=2) ** 2 for param in self.parameters())
         return y_predicted, l1_penalty + l2_penalty
+
 
 class NeuralNetworkCLNDropout(Model, nn.Module):
     def __init__(self):
@@ -145,16 +151,17 @@ class NeuralNetworkCLNDropout(Model, nn.Module):
 
     def initialise(self, d):
         hidden_size = decide_hs(d)
-        self.linear = nn.Linear(d, hidden_size) 
+        self.linear = nn.Linear(d, hidden_size)
         self.output_layer = nn.Linear(hidden_size, 1)
 
     def forward(self, input):
-        x = input.to(torch.float32) 
+        x = input.to(torch.float32)
         output = self.linear(x)
         output = self.relu(output)
         output = self.dropout(output)
         y_predicted = self.sigmoid(self.output_layer(output))
         return y_predicted, 0
+
 
 class kNN(Model, nn.Module):
     def __init__(self):
@@ -166,7 +173,7 @@ class kNN(Model, nn.Module):
         self.data = self.data.to(torch.float32)
         self.labels = torch.tensor(output)
         self.labels = self.labels.to(torch.float32)
-    
+
     def forward(self, input):
         n_samples, d_features = input.shape  # Get dataset size and feature count
         best_predictions = None
@@ -197,9 +204,6 @@ class kNN(Model, nn.Module):
         return torch.tensor(final_predictions), 0  # Return the predicted labels
 
 
-
-
-
 def decide_hs(d):
     if d < 4:
         return 4
@@ -208,4 +212,3 @@ def decide_hs(d):
     if d < 64:
         return int(1.5 * d)  # More gradual scaling
     return min(int(1.5 * d), 256)  # Upper cap for very high dimensions
-

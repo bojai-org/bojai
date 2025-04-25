@@ -92,8 +92,10 @@ def launch_pipeline(pipeline_name, stage, cli_or_ui):
     workspace_dir = SCRIPT_DIR / "applets" / f"bm_{pipeline_name}"
     filename = f"{stage}{cli_or_ui}.py"
 
-    if stage not in ['initialise', 'prepare', 'train', 'deploy']:
-        raise ValueError("Stage name is invalid. Must be one of: prepare, train, deploy, all.")
+    if stage not in ["initialise", "prepare", "train", "deploy"]:
+        raise ValueError(
+            "Stage name is invalid. Must be one of: prepare, train, deploy, all."
+        )
 
     script_path = workspace_dir / filename
     if not script_path.exists():
@@ -107,7 +109,9 @@ def remove_pipeline(pipeline_name):
     if workspace_dir.exists() and workspace_dir.is_dir():
         try:
             shutil.rmtree(workspace_dir)
-            print(f"Removed workspace for pipeline '{pipeline_name}' at {workspace_dir}")
+            print(
+                f"Removed workspace for pipeline '{pipeline_name}' at {workspace_dir}"
+            )
         except PermissionError as e:
             print(f"⚠️ Could not delete '{workspace_dir}': {e}")
     else:
@@ -119,12 +123,30 @@ def list_pipelines(pipelines, builds):
         built_dir = SCRIPT_DIR / "applets"
         if built_dir.exists():
             print("Built pipelines are:")
-            print(" |".join([d.name[3:] for d in built_dir.iterdir() if d.is_dir() and d.name.startswith("bm_")]), "|")
+            print(
+                " |".join(
+                    [
+                        d.name[3:]
+                        for d in built_dir.iterdir()
+                        if d.is_dir() and d.name.startswith("bm_")
+                    ]
+                ),
+                "|",
+            )
     if pipelines:
         prebuilt_dir = SCRIPT_DIR / "pbm"
         if prebuilt_dir.exists():
             print("Pre-built pipelines are:")
-            print(" |".join([d.name[4:] for d in prebuilt_dir.iterdir() if d.is_dir() and d.name.startswith("pbm_")]), "|")
+            print(
+                " |".join(
+                    [
+                        d.name[4:]
+                        for d in prebuilt_dir.iterdir()
+                        if d.is_dir() and d.name.startswith("pbm_")
+                    ]
+                ),
+                "|",
+            )
 
 
 def main():
@@ -138,8 +160,12 @@ def main():
 
     parser_build = subparsers.add_parser("build", help="Build a pipeline")
     parser_build.add_argument("--pipeline", required=True)
-    parser_build.add_argument("--replace", action="store_true", help="Overwrite existing build")
-    parser_build.add_argument("--directory", default='none', help="Custom pipeline directory")
+    parser_build.add_argument(
+        "--replace", action="store_true", help="Overwrite existing build"
+    )
+    parser_build.add_argument(
+        "--directory", default="none", help="Custom pipeline directory"
+    )
 
     parser_remove = subparsers.add_parser("remove", help="Remove a built pipeline")
     parser_remove.add_argument("--pipeline", required=True)
@@ -157,7 +183,7 @@ def main():
     if args.command == "start":
         launch_pipeline(args.pipeline, args.stage, "UI" if args.ui else "CLI")
     elif args.command == "build":
-        if args.directory == 'none':
+        if args.directory == "none":
             build_pipeline(args.pipeline, args.replace)
         else:
             build_dir(args.pipeline, args.directory, args.replace)

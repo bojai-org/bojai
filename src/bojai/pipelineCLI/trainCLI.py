@@ -2,19 +2,30 @@ import time
 from train import Train
 from deploy import Deploy
 import torch
-from global_vars import browseDict, getNewModel, getNewTokenizer, hyper_params, task_type, init_model
+from global_vars import (
+    browseDict,
+    getNewModel,
+    getNewTokenizer,
+    hyper_params,
+    task_type,
+    init_model,
+)
 from deployCLI import deploy_cli
 import sys
+
+
 def print_header(title):
     print("\n" + "=" * 60)
     print(f"{title}")
     print("=" * 60)
+
 
 def display_hyperparams(train: Train):
     print_header("📊 Current Hyperparameters")
     for name, val in train.trainerManager.hyperparams.items():
         print(f"{name}: {val}")
     print(f"Device: {train.prep.device}")
+
 
 def update_hyperparams(train: Train):
     print_header("🔧 Update Hyperparameters")
@@ -25,7 +36,7 @@ def update_hyperparams(train: Train):
             new_params[name] = old_val
         else:
             try:
-                new_params[name] = float(val) if '.' in val else int(val)
+                new_params[name] = float(val) if "." in val else int(val)
             except ValueError:
                 print(f"❌ Invalid value for {name}. Keeping old value.")
                 new_params[name] = old_val
@@ -34,6 +45,7 @@ def update_hyperparams(train: Train):
         print("✅ Hyperparameters updated.")
     except Exception as e:
         print(f"❌ Failed to update hyperparameters: {str(e)}")
+
 
 def train_model(train: Train):
     print_header("🚀 Starting Training")
@@ -45,12 +57,12 @@ def train_model(train: Train):
 
     trainer = train.trainerManager.trainer
     try:
-        #mimics the behavior of PyQt's signal-based threading system in a headless CLI context
-        class progressCallback():
+        # mimics the behavior of PyQt's signal-based threading system in a headless CLI context
+        class progressCallback:
             def emit(self, progress):
                 print(f"🟣 Progress: {progress}%", end="\r")
 
-        class lossCallback():
+        class lossCallback:
             def emit(self, loss):
                 print(f"💥 Loss: {loss:.4f}", end="\r")
 
@@ -64,6 +76,7 @@ def train_model(train: Train):
     except Exception as e:
         print(f"\n❌ Training failed: {str(e)}")
 
+
 def evaluate_model(train: Train):
     print_header("📈 Model Evaluation")
     try:
@@ -71,6 +84,7 @@ def evaluate_model(train: Train):
         print(f"✅ Evaluation Result: {browseDict['eval_matrice']} = {score}")
     except Exception as e:
         print(f"❌ Evaluation failed: {str(e)}")
+
 
 def replace_model(train: Train):
     print_header("🔄 Replace Model")
@@ -90,7 +104,8 @@ def init_deploy(train):
     deploy = Deploy(train, 100)
     deploy_cli(deploy)
 
-def train_cli(train : Train):
+
+def train_cli(train: Train):
     print_header("🧠 Bojai Training CLI")
     trained = False
 
@@ -123,6 +138,7 @@ def train_cli(train : Train):
                 init_deploy(train)
         elif choice == "p":
             from prepareCLI import prepare_cli
+
             print("🔁 Returning to data preparation CLI...")
             prepare_cli(train.prep)
             print("✅ Returned to training stage.")
@@ -136,6 +152,7 @@ def train_cli(train : Train):
 if __name__ == "__main__":
     from prepare import Prepare
     from train import Train
+
     model_name = ""
     data_address = input("enter dataset address: ")
     training_div = 0.8
@@ -143,7 +160,16 @@ if __name__ == "__main__":
     tokenizer = getNewTokenizer()
     model = getNewModel()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    prep = Prepare(model_name, model, device, tokenizer, data_address, task_type, (training_div, eval_div), '')
+    prep = Prepare(
+        model_name,
+        model,
+        device,
+        tokenizer,
+        data_address,
+        task_type,
+        (training_div, eval_div),
+        "",
+    )
     hyperparams = hyper_params
-    train = Train(prep, hyperparams)  
+    train = Train(prep, hyperparams)
     train_cli(train)
