@@ -1,8 +1,4 @@
 from abc import ABC, abstractmethod
-import torch
-from PIL import Image
-from transformers import ViTImageProcessor, BertTokenizer
-from model import FineTunedTransformerGEGT
 
 # ───────────────────────────────────────────────────────────────────────────────
 # userManager: Selects which user (inference logic) to use, based on the task.
@@ -27,9 +23,9 @@ class userManager():
         self.user = None
         self.tokenizer = tokenizer
 
-        if task_type == '@TODO enter-model-name':
-            # Replace the task_type above with your actual model name
-            self.user = ImplementYourUser(model, tokenizer, device, max_length)
+
+        # Replace the task_type above with your actual model name
+        self.user = ImplementYourUser(model, tokenizer, device, max_length)
 
 
 # ───────────────────────────────────────────────────────────────────────────────
@@ -118,4 +114,4 @@ class ImplementYourUser(User):
 
         ⚠️ This must return a value — either a string, number, or other result.
         '''
-        pass
+        raise NotImplementedError("Implement your usage logic")

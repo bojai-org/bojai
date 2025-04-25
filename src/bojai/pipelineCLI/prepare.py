@@ -1,6 +1,4 @@
-from model import Model
 from processor import ProcessorManager
-from dataFormater import dataFormatManager
 import random
 from global_vars import init_model
 
@@ -15,12 +13,12 @@ class Prepare():
     #task_type : the type of task, check codes in internal documentation
     #division: [a,b] where a+b = 1 and a is how much of the data for training, b how much for the data for evaluation
     #data_sep: data separator used if any. 
-    def __init__(self, model_name : str, model : Model , device, tokenizer, data_dir : str, task_type : str, division, data_sep : str = None):
+    def __init__(self, model_name : str, model , device, tokenizer, data_dir : str, task_type : str, division, data_sep : str = None):
         self.prep_ready = False
         self.model = model
         self.device = device
         self.tokenizer = tokenizer 
-        self.data_dir = self.check_data_match(data_dir, task_type, data_sep)
+        self.data_dir = data_dir
         self.division = division
         self.task_type = task_type
         self.data : ProcessorManager = ProcessorManager(self.data_dir, division, model, device, tokenizer, task_type)
@@ -30,14 +28,6 @@ class Prepare():
         self.task_type = task_type
         self.data_sep = data_sep
         self.prep_ready = True
-
-
-
-    #checks if the data matches the expected type, if not converts it to match the expected type. 
-    def check_data_match(self, data_dir, task_type, data_sep) ->str:
-        manager = dataFormatManager()
-        manager(task_type, data_dir, data_sep)
-        return manager.data_dir
     
     #returns a random datapoint
     def view_raw_data(self, index = None):

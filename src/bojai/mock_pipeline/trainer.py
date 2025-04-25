@@ -42,33 +42,21 @@ class TrainingManager:
     
     def start_model(self):
         required_keys = self.get_required_hyperparams(self.task_type)
-        if self.task_type == '@TODO enter-model-name':
-            # Validate and extract required hyperparameters
-            missing_keys = [key for key in required_keys if key not in self.hyperparams]
-            if missing_keys:
-                raise ValueError(f"Missing required hyperparameters: {missing_keys}")
 
-            # Populate seq2seqhyper_params with validated hyperparameters
-            hyper_params = {key: self.hyperparams[key] for key in required_keys}
+        # Validate and extract required hyperparameters
+        missing_keys = [key for key in required_keys if key not in self.hyperparams]
+        if missing_keys:
+            raise ValueError(f"Missing required hyperparameters: {missing_keys}")
 
-            # Now pass the validated hyperparameters to TrainerSeq2Seq
-            self.trainer = ImplementYourTrainer(self.model, self.training, self.eval, self.device, self.tokenizer, hyper_params)
+        # Populate seq2seqhyper_params with validated hyperparameters
+        hyper_params = {key: self.hyperparams[key] for key in required_keys}
+
+        # Now pass the validated hyperparameters to TrainerSeq2Seq
+        self.trainer = ImplementYourTrainer(self.model, self.training, self.eval, self.device, self.tokenizer, hyper_params)
 
     def get_required_hyperparams(self, task_type):
         # Define required hyperparameters based on task_type
-        if task_type == '@TODO enter-model-name':
-            ''''
-            @TODO 
-            return a list of the names of hyper-parameters needed for your model's training. Leave empty if no 
-            hyper-parameters are needed. 
-
-            Example: 
-            ['num_workers', 'learning_rate', 'batch_size', 'num_epochs'] 
-            
-            '''
-            return []
-        else:
-            raise ValueError(f"Unsupported task type: {task_type}")
+        return []
     
     def edit_hyper_params(self, new_hyperparams : dict):
         self.hyperparams = new_hyperparams
@@ -106,7 +94,7 @@ class Trainer(ABC):
         self.hyper_params = hyper_params.keys()
 
     @abstractmethod
-    def train(self, qthread, progress_worker, loss-worker):
+    def train(self, qthread, progress_worker, loss_worker):
         pass
 
     @abstractmethod
@@ -147,7 +135,7 @@ class ImplementYourTrainer(Trainer):
             qthread.msleep(1)
         '''
 
-        pass
+        raise NotImplementedError("Implement your training loop")
 
     def evaluate(self, eval_dataset=None):
         '''
@@ -165,4 +153,4 @@ class ImplementYourTrainer(Trainer):
         return correct / total
         '''
 
-        pass
+        raise NotImplementedError("Implement your evaluation loop")

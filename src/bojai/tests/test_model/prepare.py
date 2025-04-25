@@ -1,10 +1,4 @@
-from model import Model
-from processor import ProcessorManager
-from dataFormater import dataFormatManager
 import random
-from global_vars import init_model
-
-
 #first stage of the machine learning process. Deals with data processing and manual handling
 class Prepare(): 
     #data_type : medium, small, big ..etc
@@ -13,17 +7,18 @@ class Prepare():
     #tokenizer : the tokenizer that turns data into numbers 
     #data_dir : directory in which data lives
     #task_type : the type of task, check codes in internal documentation
-    #division: [a,b] where a+b = 1 and a is how much of the data for training, b how much for the data for evaluation
+    #divisionQ: [a,b] where a+b = 1 and a is how much of the data for training, b how much for the data for evaluation
     #data_sep: data separator used if any. 
-    def __init__(self, model_name : str, model : Model , device, tokenizer, data_dir : str, task_type : str, division, data_sep : str = None):
+    def __init__(self, model_name : str, model , device, tokenizer, data_dir : str, task_type : str, division, data_sep : str = None, mock_processor = None, mock_formatter = None):
         self.prep_ready = False
         self.model = model
         self.device = device
         self.tokenizer = tokenizer 
+        self.data_format_manager = mock_formatter
         self.data_dir = self.check_data_match(data_dir, task_type, data_sep)
         self.division = division
         self.task_type = task_type
-        self.data : ProcessorManager = ProcessorManager(self.data_dir, division, model, device, tokenizer, task_type)
+        self.data = mock_processor
         self.eval, self.train = self.data.eval, self.data.train
         self.num_data_points = len(self.data.processor)
         self.model_name = model_name
@@ -35,7 +30,7 @@ class Prepare():
 
     #checks if the data matches the expected type, if not converts it to match the expected type. 
     def check_data_match(self, data_dir, task_type, data_sep) ->str:
-        manager = dataFormatManager()
+        manager = self.data_format_manager
         manager(task_type, data_dir, data_sep)
         return manager.data_dir
     
@@ -46,7 +41,7 @@ class Prepare():
         return self.data.processor.get_item_untokenized(index)
 
     #replaces the old data with new one, needs to repeat the matching process
-    def update_data(self, data_dir, division = None):
+    def update_data(self, data_dir, division = None, processor = None):
         self.prep_ready = False
         data_dir = self.check_data_match(data_dir, self.task_type, self.data_sep)
         self.data_dir = data_dir
@@ -54,7 +49,7 @@ class Prepare():
         if div == None:
             div = self.division
         self.division = div
-        self.data : ProcessorManager = ProcessorManager(self.data_dir, div, self.model, self.device, self.tokenizer, self.task_type)
+        self.data = processor
         self.eval, self.train = self.data.eval, self.data.train
         self.num_data_points = len(self.data.processor)
         self.prep_ready = True
