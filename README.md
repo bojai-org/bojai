@@ -88,11 +88,15 @@ Users found to be engaging in harmful activities may be restricted from accessin
 
 ---
 
-## Developed by
+## Created by
 
 **Saughmon Boujkian**  
-Undergraduate student of Computer Science at the University of British Columbia  
-> “BojAI isn’t just a framework — it’s a declaration that ML should be *clean*, *modular*, and *accessible*.”
+Undergraduate student of Computer Science at the University of British Columbia.  
+
+For anything related to Bojai or business inquiries, contact: soghomonb@bojai.org
+For personal messages, you’re welcome to email me at: soghmon5@gmail.com
+
+I'd love to hear from you!
 
 ---
 
