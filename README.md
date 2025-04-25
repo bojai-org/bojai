@@ -67,7 +67,7 @@ Start a full ML pipeline from UI or CLI without writing any code:
 ## Full documentation
 
 Full docs available at:  
-  [https://bojai.org](https://bojai.org)
+  [BojAI Documentation website](https://bojai-documentation.web.app/)
 
 ## Ethical Use
 
