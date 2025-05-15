@@ -21,7 +21,7 @@ browseDict = {
     "init": True,
     "type": 2,  # 0 is image, 1 is voice, 2 is text or numbers
     "use_model_number": True,
-    "eval matrice": "accuracy",
+    "eval_matrice": "accuracy",
     "options": 1,  # 0 means no need for options, 1 means there is need for options. must have an options dict
     "options-where": 1,  # 0 means options for tokenizer, 1 means options for model; must be -1 if options is 0
 }
@@ -35,7 +35,7 @@ def getNewModel():
     return LogisticRegressionCLN()
 
 
-def init_model(data, model):
+def init_model(data, model, global_vars):
     if model.__class__.__name__ != "kNN":
         n, d = data.processor.input_matrix.shape
         model.initialise(d)
@@ -46,6 +46,8 @@ def init_model(data, model):
 task_type = "cln"
 hyper_params = {
     "learning_rate": 1e-5,
+    "num_epochs" : 10,
+    "num_batches" : 5
 }
 
 options = {

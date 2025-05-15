@@ -31,11 +31,9 @@ class Deploy:
     # adds a new eval dataset.
     def update_eval_data(self, new_data_dir):
 
-        revised_dir = self.prep.check_data_match(
-            new_data_dir, self.prep.task_type, self.prep.data_sep
-        )
+        
         new_data: ProcessorManager = ProcessorManager(
-            revised_dir,
+            new_data_dir,
             [0, 1],
             self.trainer.model,
             self.trainer.device,

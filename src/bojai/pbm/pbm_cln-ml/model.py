@@ -169,39 +169,30 @@ class kNN(Model, nn.Module):
         self.linear = None
 
     def initialise(self, input, output):
-        self.data = torch.tensor(input)
-        self.data = self.data.to(torch.float32)
-        self.labels = torch.tensor(output)
-        self.labels = self.labels.to(torch.float32)
+        self.data = torch.tensor(input, dtype=torch.float32)
+        self.labels = torch.tensor(output, dtype=torch.float32)
 
     def forward(self, input):
-        n_samples, d_features = input.shape  # Get dataset size and feature count
-        best_predictions = None
-        best_k = 1
+        n_samples, d_features = input.shape
+        k = 1  # Change if tuning
 
-        # Array to store votes: shape (n_samples, 2) for [votes for 0, votes for 1]
-        votes = np.zeros((n_samples, 2), dtype=int)
+        # Compute pairwise distances
+        dist = torch.cdist(input, self.data)
 
-        input = torch.tensor(input, dtype=torch.float32)  # Convert input to tensor
+        # Get k nearest neighbors
+        knn_indices = dist.topk(k, largest=False).indices
+        knn_labels = self.labels[knn_indices]
 
-        # Compute pairwise distances between input and training samples
-        dist = torch.cdist(input, self.data)  # Compute Euclidean distance
+        # Count votes
+        votes = torch.zeros((n_samples, 2), dtype=torch.int32)
+        votes[:, 0] = (knn_labels == 0).sum(dim=1)
+        votes[:, 1] = (knn_labels == 1).sum(dim=1)
 
-        for k in range(1, d_features + 1):  # Iterate over k values from 1 to d
-            # Get indices of k-nearest neighbors
-            knn_indices = dist.topk(k, largest=False).indices  # Shape: (n_samples, k)
+        # Pick the label with more votes
+        final_predictions = torch.argmax(votes, dim=1)
 
-            # Get labels of k-nearest neighbors
-            knn_labels = self.labels[knn_indices]  # Shape: (n_samples, k)
-
-            # Count votes: sum occurrences of 0s and 1s
-            votes[:, 0] = (knn_labels == 0).sum(dim=1)  # Votes for label 0
-            votes[:, 1] = (knn_labels == 1).sum(dim=1)  # Votes for label 1
-
-        # Get the label with the most votes for each input sample
-        final_predictions = np.argmax(votes, axis=1)  # Shape: (n_samples,)
-
-        return torch.tensor(final_predictions), 0  # Return the predicted labels
+        # Make shape and dtype compatible with BCELoss
+        return final_predictions.unsqueeze(1).float(), 0
 
 
 def decide_hs(d):

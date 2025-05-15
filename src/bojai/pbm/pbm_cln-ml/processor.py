@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import os
+import torch
 from torch.utils.data import Dataset
 import numpy as np
 import json
@@ -136,9 +137,8 @@ class ProcessorNumber(Processor, Dataset):
         return inputs_train, inputs_eval, outputs_train, outputs_eval
 
     def __getitem__(self, idx):
-        input = self.input_matrix[idx]
-        output = self.output[idx]
-
+        input = torch.tensor(self.input_matrix[idx], dtype=torch.float32)
+        output = torch.tensor(self.output[idx], dtype=torch.float32)
         return input, output
 
     def __len__(self):
