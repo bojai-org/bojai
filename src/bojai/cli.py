@@ -147,7 +147,7 @@ def list_pipelines(pipelines, builds):
                 ),
                 "|",
             )
-
+            
 
 def main():
     parser = argparse.ArgumentParser(description="BojAI Command Line Interface")
@@ -193,7 +193,6 @@ def main():
         new_custom_pipeline(args.pipeline, args.directory)
     elif args.command == "list":
         list_pipelines(args.pipelines, args.builds)
-
 
 if __name__ == "__main__":
     main()
