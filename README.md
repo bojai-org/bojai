@@ -28,7 +28,7 @@ Instead of spending time wiring data processors, models, and training loops toge
 Install from source:
 
 ```bash
-git clone https://github.com/saughmon/bojai.git
+git clone [https://github.com/saughmon/bojai.git](https://github.com/bojai-org/bojai.git)
 cd bojai
 pip install .
 ```
