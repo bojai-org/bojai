@@ -9,10 +9,10 @@ This is your custom model file.
 There are NO base classes, NO requirements, and NO restrictions.
 Just make sure the object you define here can be passed to your trainer class.
 
+If you need to define your own tokenizer, you can define it here then import it in custom_data_processor.py
+
 👇 Example of a flexible placeholder model:
 """
-
-
 class YourModel:
     def __init__(self):
         # Initialize your layers, sklearn estimator, or logic here
@@ -44,7 +44,8 @@ class YourModel:
 
 """
 You’ll use this model object in:
-- train.py for training and evaluation
-- deploy.py for inference
+- custom_trainer.py for training and evaluation
+- custom_pipeline_user.py for inference
+- global_vars.py to write the logic of initialising an object of this class. 
 You can modify it however you want.
 """
