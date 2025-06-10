@@ -1,12 +1,53 @@
 import argparse
 import shutil
 import subprocess
+import os
 from pathlib import Path
 
 # Base directory where this script lives
 SCRIPT_DIR = Path(__file__).resolve().parent
 
+def main():
+    parser = argparse.ArgumentParser(description='Bojai CLI')
+    subprocess = parser.add_subparsers(dest='command')
+    # Modify command
+modify_parser = subparsers.add_parser('modify', help='Modify an existing pipeline')
+modify_parser.add_argument('--pipeline', required=True, help='Name of the pipeline to modify')
 
+args = parser.parse_args()
+if args.command == 'modify':
+        modify_pipeline(args.pipeline)
+
+def modify_pipeline(pipeline_name):
+    def modify_pipeline(pipeline_name):
+     pipeline_dir = os.path.join('pipelines', pipeline_name)
+    if not os.path.exists(pipeline_dir):
+        print(f"Pipeline '{pipeline_name}' does not exist.")
+        return
+
+    # Load existing files (e.g., config, steps)
+    pipeline_file = os.path.join(pipeline_dir, 'pipeline.py')
+    if os.path.exists(pipeline_file):
+        with open(pipeline_file, 'r') as f:
+            code = f.read()
+        print(f"Loaded pipeline code from {pipeline_file}")
+        
+        # Insert or update specific logic here
+        modified_code = update_pipeline_logic(code)
+
+        # Save changes
+        with open(pipeline_file, 'w') as f:
+            f.write(modified_code)
+        print(f"Updated pipeline '{pipeline_name}'.")
+
+def update_pipeline_logic(code: str) -> str:
+    # Placeholder: Add custom logic here
+    # e.g., inject new steps, modify config, etc.
+    if "# New Step Placeholder" in code:
+        return code.replace("# New Step Placeholder", "def new_step():\n    print('New step added')")
+    
+    # Implementation goes here
+    pass
 def build_pipeline(pipeline_name, replace):
     workspace_dir = SCRIPT_DIR / "applets" / f"bm_{pipeline_name}"
 
