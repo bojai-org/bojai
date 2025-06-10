@@ -58,25 +58,9 @@ class User(ABC):
 
     @abstractmethod
     def use_model(self, input):
-        """
-        input: string, image path, number, or custom data — whatever your model expects
-
-        This method should:
-        1. Preprocess the input
-        2. Run it through the model (using self.model)
-        3. Post-process and return the result
-
-        Example (text task):
-            tokens = self.tokenizer(input, return_tensors="pt")
-            output = self.model(**tokens)
-            return output
-
-        Example (image task):
-            image = Image.open(input)
-            processed = self.processor(image).unsqueeze(0)
-            output = self.model(processed)
-            return postprocess(output)
-        """
+        '''
+        Abstract method, do not touch. Go to the non-abstract class below to implement your logic. 
+        '''
         pass
 
 
@@ -93,6 +77,7 @@ You can use:
 - HuggingFace
 - OpenCV
 - Pure Python logic
+- Call non-python files
 - Anything that fits your model
 
 This class is what the user interacts with during the deploy stage (via UI or CLI).

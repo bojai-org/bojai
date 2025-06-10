@@ -105,10 +105,16 @@ class Trainer(ABC):
 
     @abstractmethod
     def train(self, qthread, progress_worker, loss_worker):
+        '''
+        Abstract definition, do not touch. Go to the non-abstract class below. 
+        '''
         pass
 
     @abstractmethod
     def evaluate(self, eval_dataset=None):
+        '''
+        Abstract definition, do not touch. Go to the non-abstract class below. 
+        '''
         pass
 
 
