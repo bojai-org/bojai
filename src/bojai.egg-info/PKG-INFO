@@ -1,3 +1,27 @@
+Metadata-Version: 2.4
+Name: bojai
+Version: 0.1.0
+Summary: BojAI – Modular ML pipelines for everyone
+Author-email: Saughmon Boujkian <soghmon5@gmail.com>
+License: Apache-2.0
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: cryptography==42.0.5
+Requires-Dist: numpy==1.26.4
+Requires-Dist: pandas==2.2.3
+Requires-Dist: Pillow==11.2.1
+Requires-Dist: psutil==6.0.0
+Requires-Dist: PyQt5==5.15.11
+Requires-Dist: PyQt5_sip==12.16.1
+Requires-Dist: pytest==8.3.5
+Requires-Dist: PyYAML==6.0.2
+Requires-Dist: Requests==2.32.3
+Requires-Dist: scikit_learn==1.6.1
+Requires-Dist: torch==2.3.0
+Requires-Dist: transformers==4.41.2
+Dynamic: license-file
+
 # BojAI — Build, Train, and Deploy ML Models Without Writing Boilerplate
 
 **BojAI** is an open-source framework that transforms how machine learning is built, trained, and deployed.
@@ -28,7 +52,7 @@ Instead of spending time wiring data processors, models, and training loops toge
 Install from source:
 
 ```bash
-git clone [https://github.com/saughmon/bojai.git](https://github.com/bojai-org/bojai.git)
+git clone https://github.com/saughmon/bojai.git
 cd bojai
 pip install .
 ```

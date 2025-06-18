@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from torch.utils.data import Dataset
-
 # ───────────────────────────────────────────────────────────────────────────────
 # ProcessorManager: Chooses the right data processor and sets up train/eval sets
 # ───────────────────────────────────────────────────────────────────────────────
@@ -33,6 +32,7 @@ class ProcessorManager:
 
     def decide_which_processor(self, task_type):
         # Replace this with logic to choose between multiple processors if needed
+        from custom_data_processor import YourDataProcessor
         self.processor = YourDataProcessor(
             self.data_dir, self.division, self.model, self.device, self.tokenizer
         )
@@ -69,7 +69,7 @@ It defines the interface Bojai expects for handling data, and automatically hand
 - Train/eval division
 - Accessing tokenized and untokenized samples
 
-You MUST implement:
+You MUST implement the following functions in the non-abstract class:
 - get_inputs_outputs(): Load your data and return two lists: inputs, outputs
 - get_train_eval(): Split those lists into train/eval portions
 - __getitem__(): Return a tokenized example
@@ -116,96 +116,37 @@ class Processor(ABC, Dataset):
 
     @abstractmethod
     def get_inputs_outputs(self, data_dir):
-        """
-        Load your data from the data directory and return:
-        - inputs: a list of input samples
-        - outputs: a list of output labels (or targets)
-
-        Example:
-        return ["Translate this", "Another example"], ["Traduce esto", "Otro ejemplo"]
-        """
+        '''
+        Abstract definition, do not touch. Go to the non-abstract class below. 
+        '''
         pass
 
     @abstractmethod
     def get_train_eval(self):
-        """
-        Split self.inputs and self.outputs into:
-        - inputs_train
-        - inputs_eval
-        - outputs_train
-        - outputs_eval
-
-        Example:
-        return inputs[:80], inputs[80:], outputs[:80], outputs[80:]
-        """
+        '''
+        Abstract definition, do not touch. Go to the non-abstract class below. 
+        '''
         pass
 
     @abstractmethod
     def __len__(self):
-        """
-        Return the number of examples in this dataset
-        """
+        '''
+        Abstract definition, do not touch. Go to the non-abstract class below. 
+        '''
         pass
 
     @abstractmethod
     def __getitem__(self, idx):
-        """
-        Return a tokenized version of the input/output at the given index
-
-        Example:
-        return {
-            "input_ids": torch.tensor(...),
-            "labels": torch.tensor(...)
-        }
-        """
+        '''
+        Abstract definition, do not touch. Go to the non-abstract class below. 
+        '''
         pass
 
     @abstractmethod
     def get_item_untokenized(self, idx):
-        """
-        Return the raw (untokenized) version of the input/output at the given index
-
-        Example:
-        return self.inputs[idx], self.outputs[idx]
-        """
+        '''
+        Abstract definition, do not touch. Go to the non-abstract class below. 
+        '''
         pass
 
 
-# ───────────────────────────────────────────────────────────────────────────────
-# YourDataProcessor: Example implementation of a custom Processor
-# ───────────────────────────────────────────────────────────────────────────────
-class YourDataProcessor(Processor):
-    def __init__(
-        self,
-        data_dir,
-        division,
-        model,
-        device,
-        tokenizer,
-        is_main=True,
-        inputs=None,
-        outputs=None,
-    ):
-        super().__init__(
-            data_dir, division, model, device, tokenizer, is_main, inputs, outputs
-        )
-
-    def get_inputs_outputs(self, data_dir):
-        # Load your data here — for now return empty lists as an example
-        return [], []
-
-    def get_train_eval(self):
-        # Split your inputs and outputs — here we return empty example splits
-        return [], [], [], []
-
-    def __len__(self):
-        # Number of examples in the dataset
-        return len(self.inputs)
-
-    def __getitem__(self, idx):
-        # Return tokenized data sample
-        return "001011"
-
-    def get_item_untokenized(self, idx):
-        # Return untokenized/raw data sample
-        return "test"

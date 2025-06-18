@@ -162,7 +162,6 @@ def list_pipelines(pipelines, builds):
 def checkout_pipelines(pipeline_name, cli_or_ui) :
     pass
 
-
 def main():
     parser = argparse.ArgumentParser(description="BojAI Command Line Interface")
     subparsers = parser.add_subparsers(dest="command", required=True)

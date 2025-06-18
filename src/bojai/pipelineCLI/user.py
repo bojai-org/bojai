@@ -25,6 +25,7 @@ class userManager:
         self.tokenizer = tokenizer
 
         # Replace the task_type above with your actual model name
+        from custom_pipeline_user import ImplementYourUser
         self.user = ImplementYourUser(model, tokenizer, device, max_length)
 
 
@@ -58,63 +59,7 @@ class User(ABC):
 
     @abstractmethod
     def use_model(self, input):
-        """
-        input: string, image path, number, or custom data — whatever your model expects
-
-        This method should:
-        1. Preprocess the input
-        2. Run it through the model (using self.model)
-        3. Post-process and return the result
-
-        Example (text task):
-            tokens = self.tokenizer(input, return_tensors="pt")
-            output = self.model(**tokens)
-            return output
-
-        Example (image task):
-            image = Image.open(input)
-            processed = self.processor(image).unsqueeze(0)
-            output = self.model(processed)
-            return postprocess(output)
-        """
+        '''
+        Abstract method, do not touch. Go to the non-abstract class below to implement your logic. 
+        '''
         pass
-
-
-# ───────────────────────────────────────────────────────────────────────────────
-# ImplementYourUser: Your own model usage logic
-# ───────────────────────────────────────────────────────────────────────────────
-"""
-✅ This is where YOU define how your model is used in deployment.
-
-You must extend `User` and implement `use_model`.
-
-You can use:
-- Torch
-- HuggingFace
-- OpenCV
-- Pure Python logic
-- Anything that fits your model
-
-This class is what the user interacts with during the deploy stage (via UI or CLI).
-"""
-
-
-class ImplementYourUser(User):
-    def use_model(self, input):
-        """
-        Replace this with your own usage logic.
-
-        Example (for a text model):
-            inputs = self.tokenizer(input, return_tensors="pt", padding=True)
-            outputs = self.model(**inputs)
-            return outputs
-
-        Example (for an image model):
-            image = Image.open(input)
-            processed = self.processor(image).unsqueeze(0)
-            output = self.model(processed)
-            return output
-
-        ⚠️ This must return a value — either a string, number, or other result.
-        """
-        raise NotImplementedError("Implement your usage logic")

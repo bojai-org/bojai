@@ -73,14 +73,3 @@ class UserGet(User):
         return generated_text
 
 
-model = FineTunedTransformerGEGT(
-    vocab_size=30522
-)  # Specify the vocab size (e.g., from a pretrained model)
-processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
-image_processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
-tokenizer_text = BertTokenizer.from_pretrained("bert-base-uncased")
-tokenizer = [image_processor, tokenizer_text]
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-UserGet(model, tokenizer, device, 10).use_model(
-    "C:\\Users\\soghm\\OneDrive\\Desktop\\me.jpg"
-)
