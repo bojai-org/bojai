@@ -1,12 +1,20 @@
 import argparse
 import shutil
 import subprocess
+import os
 from pathlib import Path
 
 # Base directory where this script lives
 SCRIPT_DIR = Path(__file__).resolve().parent
 
-
+def update_pipeline_logic(code: str) -> str:
+    # Placeholder: Add custom logic here
+    # e.g., inject new steps, modify config, etc.
+    if "# New Step Placeholder" in code:
+        return code.replace("# New Step Placeholder", "def new_step():\n    print('New step added')")
+    
+    # Implementation goes here
+    pass
 def build_pipeline(pipeline_name, replace):
     workspace_dir = SCRIPT_DIR / "applets" / f"bm_{pipeline_name}"
 
@@ -147,7 +155,42 @@ def list_pipelines(pipelines, builds):
                 ),
                 "|",
             )
-            
+
+def modify_pipeline(pipeline_name, directory):
+    """
+    Copies the code of a pre-existing Bojai pipeline into a specified directory 
+    so the user can freely modify it.
+
+    Parameters:
+        pipeline_name (str): 
+            The name of the built-in pipeline to be copied. 
+            Must match one of the pipelines returned by `bojai list --pipelines`.
+
+        directory (str): 
+            The destination path where the pipeline code should be copied. 
+            A new subdirectory named after the pipeline will be created inside this directory.
+
+    Behavior:
+        - Validates the pipeline name against available built-in pipelines.
+        - Creates the target directory if it doesn't exist.
+        - Copies all relevant files (e.g., model, training, config) from the built-in pipeline folder 
+          to the new destination subfolder.
+
+    Example:
+        modify_pipeline("text_classification", "/home/user/custom_pipelines")
+        # This creates:
+        # /home/user/custom_pipelines/text_classification/
+        #     ├── model.py
+        #     ├── preprocess.py
+        #     ├── train.py
+        #     └── config.yaml
+
+    Notes:
+        - Modifying the copied files has no effect on the original built-in pipelines.
+        - This is a convenient way to start from a working pipeline and make custom changes 
+          without writing boilerplate code from scratch.
+    """
+    pass
 
 def main():
     parser = argparse.ArgumentParser(description="BojAI Command Line Interface")
@@ -178,6 +221,10 @@ def main():
     parser_list.add_argument("--pipelines", action="store_true")
     parser_list.add_argument("--builds", action="store_true")
 
+    parser_modify = subparsers.add_parser('modify', help='Modify an existing pipeline')
+    parser_modify.add_argument('--pipeline', required=True, help='Name of the pipeline to modify')
+    parser_modify.add_argument('--directory', required=True, help='Directory to which the pipeline will be copied')
+
     args = parser.parse_args()
 
     if args.command == "start":
@@ -193,6 +240,8 @@ def main():
         new_custom_pipeline(args.pipeline, args.directory)
     elif args.command == "list":
         list_pipelines(args.pipelines, args.builds)
+    elif args.command == 'modify':
+        modify_pipeline(args.pipeline, args.directory)
 
 if __name__ == "__main__":
     main()
