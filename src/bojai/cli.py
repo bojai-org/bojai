@@ -147,20 +147,7 @@ def list_pipelines(pipelines, builds):
                 ),
                 "|",
             )
-# //
-# Inputs:
-# name of the pipline that needs to be fetched
-# and whether the user wants to checkout the pipeline in "CLI" or "UI"
-#
-# Outputs:
-# if "CLI": returns the command line needed to run the pipeline 
-# else if "UI": returns a UI configuratoin that shows 
-#               info about the pipeline including the 
-#               steps that have been run on it and 
-#               the directories of its files 
-# //
-def checkout_pipelines(pipeline_name, cli_or_ui) :
-    pass
+            
 
 def main():
     parser = argparse.ArgumentParser(description="BojAI Command Line Interface")
@@ -191,10 +178,6 @@ def main():
     parser_list.add_argument("--pipelines", action="store_true")
     parser_list.add_argument("--builds", action="store_true")
 
-    parser_checkout = subparsers.add_parser("checkout", help = "Checkout an existing pipeline")
-    parser_checkout.add_argument("--pipeline", required = True)
-    parser_checkout.add_argument("--ui", action = "store-true")
-
     args = parser.parse_args()
 
     if args.command == "start":
@@ -209,9 +192,7 @@ def main():
     elif args.command == "create":
         new_custom_pipeline(args.pipeline, args.directory)
     elif args.command == "list":
-        list_pipelines(args.pipelines, args.builds) 
-    elif args.command == "checkout":
-        checkout_pipelines(args.pipeline, "UI" if args.ui else "CLI")
+        list_pipelines(args.pipelines, args.builds)
 
 if __name__ == "__main__":
     main()
