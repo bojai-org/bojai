@@ -192,7 +192,6 @@ def modify_pipeline(pipeline_name, directory):
     """
     pass
 
-
 def main():
     parser = argparse.ArgumentParser(description="BojAI Command Line Interface")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -243,7 +242,6 @@ def main():
         list_pipelines(args.pipelines, args.builds)
     elif args.command == 'modify':
         modify_pipeline(args.pipeline, args.directory)
-
 
 if __name__ == "__main__":
     main()
