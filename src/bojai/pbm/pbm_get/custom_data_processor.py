@@ -1,94 +1,17 @@
-from abc import ABC, abstractmethod
+from processor import Processor
 import torch
 import os
 from torch.utils.data import Dataset
 import numpy as np
 
-
-# manages which data processor to use, used by the prep stage
-class ProcessorManager:
-    def __init__(self, data_dir, division, model, device, tokenizer, task_type):
-        self.data_dir = data_dir
-        self.division = division
-        self.tokenizer = tokenizer
-        self.model = model
-        self.device = device
-        self.processor = None
-        self.decide_which_processor(task_type)
-
-    def decide_which_processor(self, task_type):
-        if task_type == "get":
-            self.processor = ProcessorSeq2Seq(
-                self.data_dir,
-                self.division,
-                self.model,
-                self.device,
-                self.tokenizer,
-                512,
-            )
-            self.train = ProcessorSeq2Seq(
-                self.processor.train_dir,
-                [1, 0],
-                self.model,
-                self.device,
-                self.tokenizer,
-                512,
-                False,
-            )
-            self.eval = ProcessorSeq2Seq(
-                self.processor.eval_dir,
-                [0, 1],
-                self.model,
-                self.device,
-                self.tokenizer,
-                512,
-                False,
-            )
-
-
-# abstract class serving as the base for the other types of processors.
-# The classes extending it should:
-# - should split data
-# - be able to accept some ops on data if they process numbers
-# - should tokenize data
-# - should shuffle data
-# - should handle missing data and duplicates
-class Processor(ABC):
-    def __init__(self, data_dir, division, model, device, tokenizer):
-        super().__init__()
-        self.data_dir = data_dir
-        self.division = division
-        self.tokenizer = tokenizer
-        self.model = model
-        self.device = device
-        self.inputs_train, self.inputs_eval, self.outputs_train, self.outputs_eval = (
-            None,
-            None,
-            None,
-            None,
-        )
-
-    @abstractmethod
-    def __len__(self):
-        pass
-
-    @abstractmethod
-    def __getitem__(self, idx):
-        pass
-
-    @abstractmethod
-    def get_item_untokenized(self, idx):
-        pass
-
-
 # processes data for sequence to sequence models.
 # the file must be stored in two txt files, one for input and one for output.
-class ProcessorSeq2Seq(Processor, Dataset):
+class YourDataProcessor(Processor, Dataset):
     def __init__(
         self, data_dir, division, model, device, tokenizer, max_length, main=True
     ):
         super().__init__(data_dir, division, model, device, tokenizer)
-        self.inputs, self.outputs, self.combined = self.get_inputs_outputs()
+        self.inputs, self.outputs, self.combined = self.get_inputs_outputs(self.data_dir)
         train, eval = division
         self.max_length = max_length
         if train + eval != 1:
@@ -148,7 +71,7 @@ class ProcessorSeq2Seq(Processor, Dataset):
 
         return cls_embedding.squeeze(0)
 
-    def get_inputs_outputs(self):
+    def get_inputs_outputs(self, data_dir):
         inputs_file = os.path.join(self.data_dir, "input.txt")
         outputs_file = os.path.join(self.data_dir, "output.txt")
 

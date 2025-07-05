@@ -1,7 +1,7 @@
 from processor import ProcessorManager
 import random
 from global_vars import init_model
-
+from agent import DataProcessorAgent
 
 # first stage of the machine learning process. Deals with data processing and manual handling
 class Prepare:
@@ -23,6 +23,7 @@ class Prepare:
         task_type: str,
         division,
         data_sep: str = None,
+        use_agent = None
     ):
         self.prep_ready = False
         self.model = model
@@ -31,6 +32,10 @@ class Prepare:
         self.data_dir = data_dir
         self.division = division
         self.task_type = task_type
+        if use_agent[0]: 
+            agent = DataProcessorAgent("custom_data_processor.py", self.data_dir)
+            agent.process(use_agent[1], use_agent[2])
+
         self.data: ProcessorManager = ProcessorManager(
             self.data_dir, division, model, device, tokenizer, task_type
         )
