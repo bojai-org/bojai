@@ -191,10 +191,6 @@ def main():
     parser_list.add_argument("--pipelines", action="store_true")
     parser_list.add_argument("--builds", action="store_true")
 
-    parser_checkout = subparsers.add_parser("checkout", help = "Checkout an existing pipeline")
-    parser_checkout.add_argument("--pipeline", required = True)
-    parser_checkout.add_argument("--ui", action = "store-true")
-
     args = parser.parse_args()
 
     if args.command == "start":
@@ -210,8 +206,5 @@ def main():
         new_custom_pipeline(args.pipeline, args.directory)
     elif args.command == "list":
         list_pipelines(args.pipelines, args.builds) 
-    elif args.command == "checkout":
-        checkout_pipelines(args.pipeline, "UI" if args.ui else "CLI")
-
 if __name__ == "__main__":
     main()
