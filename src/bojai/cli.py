@@ -206,6 +206,5 @@ def main():
         new_custom_pipeline(args.pipeline, args.directory)
     elif args.command == "list":
         list_pipelines(args.pipelines, args.builds) 
-
 if __name__ == "__main__":
     main()
