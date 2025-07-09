@@ -402,7 +402,7 @@ class DeployWindow(QWidget):
                 save_path = os.path.join(
                     where, self.deploy.trainer.model.__class__.__name__ + ".bin"
                 )
-                torch.save(self.deploy.trainer.model.state_dict(), save_path)
+                torch.save(self.deploy.trainer.model, save_path)
                 success_msg = QtWidgets.QMessageBox()
                 success_msg.setWindowTitle("Success")
                 success_msg.setText("Model saved in " + where)
