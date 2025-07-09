@@ -7,6 +7,7 @@ from fastapi import FastAPI, HTTPException
 import torch
 import psutil
 import time
+from typing import Dict, Any
 
 # Import BojAI components
 from bojai.pipelineCLI.prepare import Prepare
@@ -17,128 +18,123 @@ from bojai.deploy.models import PipelineRequest, PipelineResponse, HealthRespons
 class PipelineServer:
     """
     Server class for handling pipeline deployment.
-    
-    Attributes:
-        pipeline_type: Type of pipeline (CLI, CLN, CLN-ML)
-        model: Loaded model for inference
-        app: FastAPI application instance
-        start_time: Server start time for uptime calculation
-        last_prediction: Timestamp of last prediction
-        prediction_count: Total number of predictions made
-        prepare: Data preparation instance
-        hyper_params: Model hyperparameters
-        user: Model user instance for inference
-        model_loader: ModelLoader instance for loading models
     """
-    
     def __init__(self, pipeline_type: str, model_path: str):
-        """
-        Initialize the pipeline server.
-        
-        Args:
-            pipeline_type: Type of pipeline to deploy
-            model_path: Path to the saved model file
-        """
-        # 1. Validate pipeline type
         if pipeline_type not in ["CLI", "CLN", "CLN-ML"]:
             raise ValueError(f"Unsupported pipeline type: {pipeline_type}")
-        
         self.pipeline_type = pipeline_type
-        self.prepare = Prepare()  # Initialize data preparation
-        
-        # 2. Get hyperparameters
+        self.prepare = Prepare()
         self.hyper_params = self._get_hyper_params()
-        
-        # 3. Initialize model loader
         self.model_loader = ModelLoader(pipeline_type)
-        
-        # 4. Load pipeline
         try:
             self.pipeline = self.model_loader.load_model(model_path)
         except Exception as e:
             raise RuntimeError(f"Failed to initialize pipeline: {str(e)}")
-        
-        # 5. Setup user for inference
         self.user = self.setup_user()
-        
-        # 6. Create FastAPI app
+        # Placeholder: In the future, extract pipeline_name from the model file here
+        # For now, we use 'placeholder' as the pipeline name for endpoint prefix
+        self.pipeline_name = "placeholder"
         self.app = self.create_app()
-        
-        # 7. Initialize monitoring variables
         self.start_time = time.time()
         self.last_prediction = None
         self.prediction_count = 0
-    
+        self.error_count = 0
+        self.total_prediction_time = 0.0
+
     def _get_hyper_params(self) -> Dict[str, Any]:
-        """
-        Get hyperparameters based on pipeline type.
-        
-        Returns:
-            Dictionary of hyperparameters
-        """
-        # Pseudo-code:
-        # 1. Return CLI hyperparameters if CLI pipeline
-        #    - input_size: (3, 500, 500)
-        #    - output_size: 5
-        # 2. Return CLN hyperparameters if CLN pipeline
-        #    - hidden_size: 256
-        #    - num_layers: 3
-        #    - num_batches: 64
-        pass
-    
+        if self.pipeline_type == "CLI":
+            return {"input_size": (3, 500, 500), "output_size": 5}
+        elif self.pipeline_type == "CLN":
+            return {"hidden_size": 256, "num_layers": 3, "num_batches": 64}
+        elif self.pipeline_type == "CLN-ML":
+            return {"hidden_size": 256, "num_layers": 3, "num_batches": 64}
+        else:
+            return {}
+
     def setup_user(self):
-        """
-        Setup user instance for model inference.
-        
-        Returns:
-            Configured user instance
-        
-        Raises:
-            RuntimeError: If user setup fails
-        """
-        # Pseudo-code:
-        # 1. Create appropriate user instance based on pipeline type
-        # 2. Return configured user
-        pass
-    
+        if self.pipeline_type == "CLI":
+            return UserCLI(self.pipeline, device="cpu")
+        elif self.pipeline_type == "CLN":
+            return UserCLN(self.pipeline, device="cpu")
+        elif self.pipeline_type == "CLN-ML":
+            return UserCLNML(self.pipeline, device="cpu")
+        else:
+            raise RuntimeError("Unsupported pipeline type for user setup")
+
     def create_app(self):
-        """
-        Create and configure the FastAPI application.
-        
-        Returns:
-            Configured FastAPI app instance
-        """
-        # Pseudo-code:
-        # 1. Create FastAPI app with title and description
-        # 2. Add routes
-        # 3. Return configured app
-        pass
-    
+        app = FastAPI(title=f"BojAI {self.pipeline_type} Pipeline Server",
+                      description="API server for BojAI pipeline deployment.")
+        self.add_routes(app)
+        return app
+
     def add_routes(self, app: FastAPI):
-        """
-        Add API routes to the FastAPI application.
-        
-        Args:
-            app: FastAPI application instance
-        """
-        # Pseudo-code:
-        # 1. Add /predict endpoint
-        #    - Handle model state check
-        #    - Process input based on pipeline type
-        #    - Return prediction
-        # 2. Add /health endpoint
-        #    - Return system health information
-        pass
-    
+        pipeline_prefix = f"/{self.pipeline_name}"
+
+        @app.post(f"{pipeline_prefix}/predict", response_model=PipelineResponse)
+        async def predict(request: PipelineRequest):
+            start_pred = time.time()
+            try:
+                input_data = request.input_data
+                # For CLI: expects 'image_path' or 'image_data' (bytes)
+                # For CLN/CLN-ML: expects 'values' (list)
+                if self.pipeline_type == "CLI":
+                    if "image_path" in input_data:
+                        result = self.user.use_model(input_data["image_path"])
+                    elif "image_data" in input_data:
+                        result = self.user.use_model(input_data["image_data"])
+                    else:
+                        raise HTTPException(status_code=400, detail={
+                            "error": "Missing image_path or image_data for CLI pipeline"
+                        })
+                elif self.pipeline_type in ["CLN", "CLN-ML"]:
+                    if "values" in input_data:
+                        result = self.user.use_model(input_data["values"])
+                    else:
+                        raise HTTPException(status_code=400, detail={
+                            "error": "Missing 'values' for CLN/CLN-ML pipeline"
+                        })
+                else:
+                    raise HTTPException(status_code=400, detail={
+                        "error": "Unsupported pipeline type"
+                    })
+                self.prediction_count += 1
+                self.last_prediction = time.time()
+                pred_time = self.last_prediction - start_pred
+                self.total_prediction_time += pred_time
+                return PipelineResponse(
+                    prediction=result.get("prediction"),
+                    confidence=result.get("confidence")
+                )
+            except Exception as e:
+                self.error_count += 1
+                raise HTTPException(status_code=500, detail={"error": str(e)})
+
+        @app.get(f"{pipeline_prefix}/health", response_model=HealthResponse)
+        async def health():
+            mem = psutil.virtual_memory()
+            cpu = psutil.cpu_percent()
+            uptime = time.time() - self.start_time
+            avg_pred_time = (self.total_prediction_time / self.prediction_count) if self.prediction_count else 0.0
+            return HealthResponse(
+                status="healthy",
+                pipeline_type=self.pipeline_type,
+                model_loaded=True,
+                uptime_seconds=uptime,
+                memory_usage_mb=mem.used / (1024 * 1024),
+                cpu_usage_percent=cpu,
+                last_prediction_time=self.last_prediction,
+                total_predictions=self.prediction_count,
+                average_prediction_time=avg_pred_time,
+                error_count=self.error_count,
+                model_info={
+                    "type": type(self.pipeline).__name__,
+                    "input_size": self.hyper_params.get("input_size"),
+                    "output_size": self.hyper_params.get("output_size")
+                }
+            )
+
     def start(self, host: str, port: int):
-        """
-        Start the API server.
-        
-        Args:
-            host: Host address to bind to
-            port: Port number to bind to
-        """
-        # Pseudo-code:
-        # 1. Check if model is loaded
-        # 2. Start FastAPI server
-        pass 
+        import uvicorn
+        if not self.pipeline:
+            raise RuntimeError("Model not loaded")
+        uvicorn.run(self.app, host=host, port=port) 

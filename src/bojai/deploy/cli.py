@@ -5,6 +5,8 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import torch
+import sys
+import os
 
 # Global variable to store running processes
 running_processes = {}
@@ -15,55 +17,59 @@ class PipelineRequest(BaseModel):
 def start_pipeline(args):
     """
     Starts a pipeline as an API server.
-    
     Args:
-        args: Command line arguments containing pipeline name, model path, port, and host
-    
-    Logic:
-    1. Validate model path and pipeline type
-    2. Create FastAPI app
-    3. Load model
-    4. Start server
-    5. Store process info
+        args: Command line arguments containing pipeline type, model path, port, and host
+    Note: For now, uses 'placeholder' as the pipeline name for endpoints.
+    In the future, pipeline name could be extracted from the .bin file or passed as an argument.
     """
-    # Pseudo-code:
-    # validate_pipeline_type(args.pipeline)
-    # validate_model_path(args.model_path)
-    # app = create_fastapi_app(args.pipeline)
-    # model = load_model(args.model_path)
-    # process = start_server(app, args.host, args.port)
-    # store_process_info(args.pipeline, process)
+    pipeline_type = args.pipeline
+    model_path = args.model_path
+    host = getattr(args, 'host', '0.0.0.0')
+    port = getattr(args, 'port', 8000)
+    # Start the server as a subprocess
+    process = subprocess.Popen([
+        sys.executable, '-m', 'bojai.deploy.server',
+        '--pipeline-type', pipeline_type,
+        '--model-path', model_path,
+        '--host', str(host),
+        '--port', str(port)
+    ])
+    running_processes[pipeline_type] = process.pid
+    print(f"Started {pipeline_type} pipeline server at {host}:{port} (PID: {process.pid})")
 
 def stop_pipeline(args):
     """
     Stops a running pipeline API server.
-    
     Args:
-        args: Command line arguments containing pipeline name
-    
-    Logic:
-    1. Find process by pipeline name
-    2. Terminate process
-    3. Remove from running processes
+        args: Command line arguments containing pipeline type
     """
-    # Pseudo-code:
-    # process = get_process_by_name(args.pipeline)
-    # terminate_process(process)
-    # remove_from_running_processes(args.pipeline)
+    pipeline_type = args.pipeline
+    pid = running_processes.get(pipeline_type)
+    if pid:
+        try:
+            os.kill(pid, signal.SIGTERM)
+            print(f"Stopped {pipeline_type} pipeline server (PID: {pid})")
+            del running_processes[pipeline_type]
+        except Exception as e:
+            print(f"Failed to stop server: {e}")
+    else:
+        print(f"No running server found for pipeline: {pipeline_type}")
 
 def get_pipeline_status(args):
     """
     Gets the status of deployed pipelines.
-    
     Args:
-        args: Command line arguments containing optional pipeline name
-    
-    Logic:
-    1. If pipeline specified, get its status
-    2. Otherwise, list all running pipelines
+        args: Command line arguments containing optional pipeline type
     """
-    # Pseudo-code:
-    # if args.pipeline:
-    #     return get_single_pipeline_status(args.pipeline)
-    # else:
-    #     return list_all_running_pipelines() 
+    if hasattr(args, 'pipeline') and args.pipeline:
+        pid = running_processes.get(args.pipeline)
+        if pid:
+            print(f"Pipeline {args.pipeline} is running (PID: {pid})")
+        else:
+            print(f"Pipeline {args.pipeline} is not running.")
+    else:
+        if running_processes:
+            for name, pid in running_processes.items():
+                print(f"Pipeline {name} is running (PID: {pid})")
+        else:
+            print("No pipelines are currently running.") 
