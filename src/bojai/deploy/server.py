@@ -14,26 +14,30 @@ from bojai.pipelineCLI.prepare import Prepare
 from bojai.deploy.model_loader import ModelLoader
 from bojai.deploy.user import UserCLI, UserCLN, UserCLNML
 from bojai.deploy.models import PipelineRequest, PipelineResponse, HealthResponse
+from .logging_utils import get_logger
+logger = get_logger(__name__)
 
 class PipelineServer:
     """
     Server class for handling pipeline deployment.
     """
     def __init__(self, pipeline_type: str, model_path: str):
+        # Convert to uppercase to handle case-insensitive input
+        pipeline_type = pipeline_type.upper()
         if pipeline_type not in ["CLI", "CLN", "CLN-ML"]:
             raise ValueError(f"Unsupported pipeline type: {pipeline_type}")
         self.pipeline_type = pipeline_type
-        self.prepare = Prepare()
         self.hyper_params = self._get_hyper_params()
         self.model_loader = ModelLoader(pipeline_type)
         try:
             self.pipeline = self.model_loader.load_model(model_path)
         except Exception as e:
+            logger.exception(f"Failed to initialize pipeline: {str(e)}")
             raise RuntimeError(f"Failed to initialize pipeline: {str(e)}")
         self.user = self.setup_user()
-        # Placeholder: In the future, extract pipeline_name from the model file here
-        # For now, we use 'placeholder' as the pipeline name for endpoint prefix
-        self.pipeline_name = "placeholder"
+        logger.info(f"Initialized PipelineServer for {pipeline_type} with model {model_path}")
+        # Extract pipeline name from model file or use default
+        self.pipeline_name = self._extract_pipeline_name(model_path)
         self.app = self.create_app()
         self.start_time = time.time()
         self.last_prediction = None
@@ -50,6 +54,12 @@ class PipelineServer:
             return {"hidden_size": 256, "num_layers": 3, "num_batches": 64}
         else:
             return {}
+
+    def _extract_pipeline_name(self, model_path: str) -> str:
+        """Extract pipeline name from model file path"""
+        from pathlib import Path
+        model_name = Path(model_path).stem
+        return model_name if model_name else "default"
 
     def setup_user(self):
         if self.pipeline_type == "CLI":
@@ -69,6 +79,28 @@ class PipelineServer:
 
     def add_routes(self, app: FastAPI):
         pipeline_prefix = f"/{self.pipeline_name}"
+
+        @app.get("/ping")
+        async def ping():
+            return {"status": "ok"}
+
+        @app.get(f"{pipeline_prefix}/check_model")
+        async def check_model():
+            """Check model properties and contents"""
+            try:
+                model_info = {
+                    "model_type": type(self.pipeline).__name__,
+                    "model_path": self.model_loader.model_path if hasattr(self.model_loader, 'model_path') else "unknown",
+                    "pipeline_type": self.pipeline_type,
+                    "is_callable": callable(self.pipeline),
+                    "model_attributes": list(self.pipeline.keys()) if hasattr(self.pipeline, 'keys') else [],
+                    "model_size": len(self.pipeline) if hasattr(self.pipeline, '__len__') else "unknown",
+                    "device": self.device if hasattr(self, 'device') else "cpu"
+                }
+                return model_info
+            except Exception as e:
+                logger.error(f"Error checking model: {e}")
+                raise HTTPException(status_code=500, detail={"error": f"Failed to check model: {str(e)}"})
 
         @app.post(f"{pipeline_prefix}/predict", response_model=PipelineResponse)
         async def predict(request: PipelineRequest):
@@ -135,6 +167,9 @@ class PipelineServer:
 
     def start(self, host: str, port: int):
         import uvicorn
-        if not self.pipeline:
+
+        if self.pipeline is None:
+            logger.error("Model not loaded")
             raise RuntimeError("Model not loaded")
+        logger.info(f"Starting Uvicorn server at {host}:{port}")
         uvicorn.run(self.app, host=host, port=port) 

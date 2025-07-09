@@ -7,6 +7,8 @@ from pydantic import BaseModel
 import torch
 import sys
 import os
+from .logging_utils import get_logger
+logger = get_logger(__name__)
 
 # Global variable to store running processes
 running_processes = {}
@@ -26,16 +28,18 @@ def start_pipeline(args):
     model_path = args.model_path
     host = getattr(args, 'host', '0.0.0.0')
     port = getattr(args, 'port', 8000)
-    # Start the server as a subprocess
-    process = subprocess.Popen([
-        sys.executable, '-m', 'bojai.deploy.server',
-        '--pipeline-type', pipeline_type,
-        '--model-path', model_path,
-        '--host', str(host),
-        '--port', str(port)
-    ])
-    running_processes[pipeline_type] = process.pid
-    print(f"Started {pipeline_type} pipeline server at {host}:{port} (PID: {process.pid})")
+    
+    logger.info(f"Starting {pipeline_type} pipeline server at {host}:{port}")
+    
+    # Start the server directly (not as subprocess) so we can see all output
+    try:
+        from bojai.deploy.server import PipelineServer
+        server = PipelineServer(pipeline_type, model_path)
+        logger.info(f"Server initialized successfully, starting on {host}:{port}")
+        server.start(host, port)
+    except Exception as e:
+        logger.exception(f"Failed to start server: {e}")
+        raise RuntimeError(f"Server failed to start: {e}")
 
 def stop_pipeline(args):
     """
@@ -48,12 +52,12 @@ def stop_pipeline(args):
     if pid:
         try:
             os.kill(pid, signal.SIGTERM)
-            print(f"Stopped {pipeline_type} pipeline server (PID: {pid})")
+            logger.info(f"Stopped {pipeline_type} pipeline server (PID: {pid})")
             del running_processes[pipeline_type]
         except Exception as e:
-            print(f"Failed to stop server: {e}")
+            logger.error(f"Failed to stop server: {e}")
     else:
-        print(f"No running server found for pipeline: {pipeline_type}")
+        logger.warning(f"No running server found for pipeline: {pipeline_type}")
 
 def get_pipeline_status(args):
     """
@@ -64,12 +68,12 @@ def get_pipeline_status(args):
     if hasattr(args, 'pipeline') and args.pipeline:
         pid = running_processes.get(args.pipeline)
         if pid:
-            print(f"Pipeline {args.pipeline} is running (PID: {pid})")
+            logger.info(f"Pipeline {args.pipeline} is running (PID: {pid})")
         else:
-            print(f"Pipeline {args.pipeline} is not running.")
+            logger.info(f"Pipeline {args.pipeline} is not running.")
     else:
         if running_processes:
             for name, pid in running_processes.items():
-                print(f"Pipeline {name} is running (PID: {pid})")
+                logger.info(f"Pipeline {name} is running (PID: {pid})")
         else:
-            print("No pipelines are currently running.") 
+            logger.info("No pipelines are currently running.") 

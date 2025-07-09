@@ -1,193 +1,371 @@
-# Deploy
+# BojAI Deployment Documentation
 
-Deployment is the process of serving your trained BojAI pipeline as an API server. This allows you to make predictions using your model through HTTP requests.
+BojAI provides a powerful deployment system that allows you to serve your trained machine learning models as REST APIs. This documentation covers everything you need to know to deploy and use BojAI pipelines in production.
 
-## CLI Usage
+## Table of Contents
 
-To deploy a pipeline as an API server, use:
+- [Quick Start](#quick-start)
+- [Pipeline Types](#pipeline-types)
+- [Deployment](#deployment)
+- [API Reference](#api-reference)
+- [Examples](#examples)
+- [Troubleshooting](#troubleshooting)
+
+## Quick Start
+
+Deploy your first model in under 5 minutes:
 
 ```bash
-bojai deploy start <pipeline> <model_path> [--host HOST] [--port PORT]
+# 1. Install BojAI
+pip install bojai
+
+# 2. Deploy a model
+bojai deploy start cln-ml my_model.bin --port 8080
+
+# 3. Test the API
+curl http://localhost:8080/ping
 ```
-- `<pipeline>`: Pipeline type to deploy. Must be one of: "CLI", "CLN", or "CLN-ML" (positional argument)
-- `<model_path>`: Path to your saved model file (.bin) (positional argument)
-- `--host`: Host address to bind the server to (default: "127.0.0.1")
-- `--port`: Port number to bind the server to (default: 8000)
 
-Other management commands:
-- `bojai deploy stop <pipeline>` — Stop a running pipeline API server
-- `bojai deploy status [pipeline]` — Get status of deployed pipelines
+## Pipeline Types
+
+BojAI deploy supports three main pipeline types:
+
+### 1. CLI (Computer Vision)
+- **Purpose**: Image classification and computer vision tasks
+- **Input**: Images (file paths or base64 encoded)
+- **Output**: Classification predictions with confidence scores
+- **Use Cases**: Object detection, image classification, visual analysis
+
+### 2. CLN (Classification)
+- **Purpose**: Numerical data classification
+- **Input**: Numerical arrays or lists
+- **Output**: Binary or multi-class predictions
+- **Use Cases**: Risk assessment, fraud detection, customer segmentation
+
+### 3. CLN-ML (Advanced ML)
+- **Purpose**: Advanced machine learning with metadata
+- **Input**: Numerical arrays with optional parameters
+- **Output**: Predictions with confidence and metadata
+- **Use Cases**: Complex ML workflows, feature importance analysis
+
+## Deployment
+
+### Command Line Interface
+
+#### Start a Pipeline Server
+
+```bash
+bojai deploy start <pipeline-type> <model-path> [options]
+```
+
+**Parameters:**
+- `pipeline-type`: One of `cli`, `cln`, or `cln-ml` (case-insensitive)
+- `model-path`: Path to your trained model file (.bin format)
+
+**Options:**
+- `--port`: Port number (default: 8000)
+- `--host`: Host address (default: 127.0.0.1)
+
+**Examples:**
+
+```bash
+# Deploy a computer vision model
+bojai deploy start cli vision_model.bin --port 8080
+
+# Deploy a classification model
+bojai deploy start cln classifier.bin --host 0.0.0.0 --port 9000
+
+# Deploy an advanced ML model
+bojai deploy start cln-ml advanced_model.bin --port 8080
+```
+
+#### Manage Running Pipelines
+
+```bash
+# Stop a pipeline
+bojai deploy stop <pipeline-name>
+
+# Check pipeline status
+bojai deploy status [pipeline-name]
+
+# List all running pipelines
+bojai deploy status
+```
+
+### Model File Format
+
+BojAI expects PyTorch model files in `.bin` format:
+
+```python
+# Save your model
+import torch
+
+# For a complete model
+torch.save(model, 'my_model.bin')
+
+# For model state dict
+torch.save(model.state_dict(), 'my_model.bin')
+```
+
+## API Reference
+
+### Base URL
+All endpoints are available at: `http://your-server:port`
 
 
-## API Endpoints
+### Endpoints
 
-### POST /{your_chosen_pipeline_name}/predict
-Makes predictions using the deployed model.
+#### 1. Health Check
+**GET** `/ping`
 
-#### Request Format
-- **CLI Pipeline**
-  ```json
-  {
-    "input_data": {
-      "image_path": "path/to/image.jpg"
-      // or
-      "image_data": "<base64-encoded-image-bytes>"
-    }
-  }
-  ```
-- **CLN Pipeline**
-  ```json
-  {
-    "input_data": {
-      "values": [1.0, 2.0, 3.0]
-    }
-  }
-  ```
-- **CLN-ML Pipeline**
-  ```json
-  {
-    "input_data": {
-      "values": [1.0, 2.0, 3.0]
-    }
-  }
-  ```
+Check if the server is running.
 
-#### Response Format
-- **All Pipelines**
-  ```json
-  {
-    "prediction": <predicted_value>,
-    "confidence": <confidence_score>
-  }
-  ```
+**Response:**
+```json
+{
+  "status": "ok"
+}
+```
 
-#### Response Codes
-- **200 OK**: Prediction was successful and the response contains the prediction and confidence.
-- **400 Bad Request**: The input data is missing required fields or is in the wrong format (e.g., missing 'image_path' for CLI, or 'values' for CLN/CLN-ML).
-- **404 Not Found**: The model file could not be found at the specified path.
-- **500 Internal Server Error**: An unexpected error occurred during prediction or model loading.
+#### 2. Model Information
+**GET** `/{model_name}/check_model`
 
-#### Examples
-- **CLI Example**
-  ```json
-  {
-    "input_data": {"image_path": "cat.jpg"}
-  }
-  // Response
-  {
-    "prediction": 1,
-    "confidence": 0.95
-  }
-  ```
-- **CLN Example**
-  ```json
-  {
-    "input_data": {"values": [1.0, 2.0, 3.0]}
-  }
-  // Response
-  {
-    "prediction": 0,
-    "confidence": 0.87
-  }
-  ```
-- **CLN-ML Example**
-  ```json
-  {
-    "input_data": {"values": [4.2, 5.1, 6.3]}
-  }
-  // Response
-  {
-    "prediction": 1,
-    "confidence": 0.91
-  }
-  ```
+Get detailed information about the loaded model.
 
-### GET /placeholder/health
-Checks the health and status of the deployed server.
+**Response:**
+```json
+{
+  "model_type": "OrderedDict",
+  "model_path": "/path/to/model.bin",
+  "pipeline_type": "CLN-ML",
+  "is_callable": true,
+  "model_attributes": ["layer1", "layer2", "output"],
+  "model_size": 3,
+  "device": "cpu"
+}
+```
 
-#### Response Format
+#### 3. Health Monitoring
+**GET** `/{model_name}/health`
+
+Get comprehensive server and model health information.
+
+**Response:**
 ```json
 {
   "status": "healthy",
-  "pipeline_type": "CLI",
+  "pipeline_type": "CLN-ML",
   "model_loaded": true,
-  "uptime_seconds": 3600,
-  "memory_usage_mb": 512,
-  "cpu_usage_percent": 25,
-  "last_prediction_time": 1719123456,
-  "total_predictions": 100,
-  "average_prediction_time": 0.05,
-  "error_count": 0,
+  "uptime_seconds": 3600.5,
+  "memory_usage_mb": 512.3,
+  "cpu_usage_percent": 15.2,
+  "last_prediction_time": 1640995200.0,
+  "total_predictions": 150,
+  "average_prediction_time": 0.045,
+  "error_count": 2,
   "model_info": {
-    "type": "UserCLI",
-    "input_size": [3, 500, 500],
-    "output_size": 5
+    "type": "MyModel",
+    "input_size": "dynamic",
+    "output_size": 1
   }
 }
 ```
 
-#### Response Codes
-- **200 OK**: Health check was successful and the server is running.
+#### 4. Predictions
 
-#### Field Descriptions
-- **status**: Server health status ("healthy" or "unhealthy").
-- **pipeline_type**: The type of pipeline deployed ("CLI", "CLN", or "CLN-ML").
-- **model_loaded**: Whether the model is loaded and ready for inference.
-- **uptime_seconds**: How long the server has been running (in seconds).
-- **memory_usage_mb**: Current memory usage of the server (in megabytes).
-- **cpu_usage_percent**: Current CPU usage percentage.
-- **last_prediction_time**: Timestamp of the last prediction (or null if none yet).
-- **total_predictions**: Total number of predictions served since startup.
-- **average_prediction_time**: Average time (in seconds) taken per prediction.
-- **error_count**: Number of errors encountered since startup.
-- **model_info**: Basic information about the loaded model (type, input/output size).
+##### CLI Pipeline (Images)
+**POST** `/{model_name}/predict`
 
-## Error Handling
+**Request Body:**
+```json
+{
+  "input_data": {
+    "image_path": "/path/to/image.jpg"
+  }
+}
+```
 
-The server returns standardized HTTP error responses:
+Or with base64 image:
+```json
+{
+  "input_data": {
+    "image_data": "base64_encoded_image_string"
+  }
+}
+```
 
-- **400 Bad Request** — Invalid input data (missing or wrong fields).
-- **404 Not Found** — Model file not found at the specified path.
-- **500 Internal Server Error** — Server-side errors (e.g., model loading or inference failure).
+**Response:**
+```json
+{
+  "prediction": 2,
+  "confidence": 0.95
+}
+```
 
-## Usage Examples
+##### CLN/CLN-ML Pipeline (Numerical Data)
+**POST** `/{model_name}/predict`
 
-### Starting a Server
+**Request Body:**
+```json
+{
+  "input_data": {
+    "values": [1.0, 2.5, 3.2, 0.8]
+  }
+}
+```
+
+**Response (CLN):**
+```json
+{
+  "prediction": 1,
+  "confidence": 0.87
+}
+```
+
+**Response (CLN-ML):**
+```json
+{
+  "prediction": 1,
+  "confidence": 0.87,
+  "metadata": {
+    "processing_time": 0.045,
+    "feature_importance": [0.3, 0.4, 0.2, 0.1]
+  }
+}
+```
+
+### Error Responses
+
+All endpoints return appropriate HTTP status codes:
+
+- **200 OK**: Successful operation
+- **400 Bad Request**: Invalid input data
+- **404 Not Found**: Model file or endpoint not found
+- **500 Internal Server Error**: Server or model error
+
+Error response format:
+```json
+{
+  "detail": {
+    "error": "Error description"
+  }
+}
+```
+
+## Examples
+
+### Python Client
+
+```python
+import requests
+import json
+
+# Server configuration
+BASE_URL = "http://localhost:8080"
+MODEL_NAME = "my_model"
+
+# Health check
+response = requests.get(f"{BASE_URL}/ping")
+print(f"Server status: {response.json()}")
+
+# Check model
+response = requests.get(f"{BASE_URL}/{MODEL_NAME}/check_model")
+model_info = response.json()
+print(f"Model type: {model_info['model_type']}")
+
+# Make prediction (CLN-ML)
+data = {
+    "input_data": {
+        "values": [1.0, 2.0, 3.0, 4.0]
+    }
+}
+response = requests.post(f"{BASE_URL}/{MODEL_NAME}/predict", json=data)
+result = response.json()
+print(f"Prediction: {result['prediction']}, Confidence: {result['confidence']}")
+```
+
+### cURL Examples
+
 ```bash
-# Deploy a CLI pipeline
-bojai deploy start cli /path/to/model.bin
+# Health check
+curl http://localhost:8080/ping
 
-# Deploy a CLN pipeline with custom host and port
-bojai deploy start cln /path/to/model.bin --host localhost --port 8080
+# Check model
+curl http://localhost:8080/my_model/check_model
+
+# Make prediction
+curl -X POST http://localhost:8080/my_model/predict \
+  -H "Content-Type: application/json" \
+  -d '{"input_data": {"values": [1.0, 2.0, 3.0]}}'
+
+# Image prediction (CLI)
+curl -X POST http://localhost:8080/vision_model/predict \
+  -H "Content-Type: application/json" \
+  -d '{"input_data": {"image_path": "/path/to/image.jpg"}}'
 ```
 
-### Making Predictions
+## Monitoring and Logging
+
+### Log Levels
+
+BojAI uses structured logging with the following levels:
+- **INFO**: General operational information
+- **WARNING**: Potential issues
+- **ERROR**: Errors that don't stop the service
+- **CRITICAL**: Critical errors that may stop the service
+
+### Metrics
+
+The `/health` endpoint provides key metrics:
+- Uptime
+- Memory usage
+- CPU usage
+- Prediction count and timing
+- Error count
+
+### Integration with Monitoring Tools
+
 ```python
-import requests
+# Prometheus metrics
+from prometheus_client import Counter, Histogram
 
-# CLI pipeline prediction
-response = requests.post(
-    "http://localhost:8000/placeholder/predict",
-    json={"input_data": {"image_path": "cat.jpg"}}
-)
-print(response.json())
-
-# CLN pipeline prediction
-response = requests.post(
-    "http://localhost:8000/placeholder/predict",
-    json={"input_data": {"values": [1.0, 2.0, 3.0]}}
-)
-print(response.json())
+prediction_counter = Counter('bojai_predictions_total', 'Total predictions')
+prediction_duration = Histogram('bojai_prediction_duration_seconds', 'Prediction duration')
 ```
 
-### Checking Health
-```python
-import requests
+## Troubleshooting
 
-response = requests.get("http://localhost:8000/placeholder/health")
-print(response.json())
+### Common Issues
+
+#### 1. Model File Not Found
+**Error**: `Model file not found: model.bin`
+**Solution**: Check the file path and ensure the model file exists
+
+#### 2. Invalid Pipeline Type
+**Error**: `Unsupported pipeline type: invalid_type`
+**Solution**: Use one of: `cli`, `cln`, or `cln-ml`
+
+#### 3. Model Not Callable
+**Error**: `Model is not callable - invalid model file`
+**Solution**: Ensure your model file contains a proper PyTorch model, not just a state dict
+
+#### 4. Port Already in Use
+**Error**: `Address already in use`
+**Solution**: Use a different port or stop the existing service
+
+### Debug Mode
+
+Enable debug logging:
+
+```bash
+export BOJAI_LOG_LEVEL=DEBUG
+bojai deploy start cln-ml model.bin --port 8080
 ```
 
+### Performance Optimization
 
-Updated on 3rd July 2025
+1. **Use GPU**: Ensure PyTorch is installed with CUDA support
+2. **Batch Processing**: Implement batch prediction endpoints for high throughput
+3. **Model Optimization**: Use TorchScript or ONNX for faster inference
+4. **Caching**: Implement prediction result caching for repeated inputs
 

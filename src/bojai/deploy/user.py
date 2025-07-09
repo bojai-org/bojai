@@ -6,6 +6,8 @@ import torch
 from PIL import Image
 import io
 import numpy as np
+from .logging_utils import get_logger
+logger = get_logger(__name__)
 
 class User:
     """Base class for model users"""
@@ -63,12 +65,14 @@ class UserCLNML(User):
 
     def use_model(self, input):
         """Use the model for prediction (advanced ML input)"""
+        if not callable(self.model):
+            raise RuntimeError("Model is not callable - invalid model file")
+        
         # Accepts list or np.ndarray
         x = torch.tensor(input, dtype=torch.float32).unsqueeze(0)
         with torch.no_grad():
             output = self.model(x)
             pred = int(torch.round(output).item())
             confidence = float(torch.sigmoid(output).item())
-            # Placeholder for metadata (e.g., feature importance)
             metadata = {"processing_time": 0.0, "feature_importance": []}
         return {"prediction": pred, "confidence": confidence, "metadata": metadata} 

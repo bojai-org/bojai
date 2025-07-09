@@ -4,6 +4,8 @@ Data models for API request/response handling.
 
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
+from .logging_utils import get_logger
+logger = get_logger(__name__)
 
 class PipelineRequest(BaseModel):
     """Request model for pipeline predictions"""
