@@ -156,41 +156,31 @@ def list_pipelines(pipelines, builds):
                 "|",
             )
 
-def modify_pipeline(pipeline_name, directory):
-    """
-    Copies the code of a pre-existing Bojai pipeline into a specified directory 
-    so the user can freely modify it.
+def modify_pipeline(pipeline_name, directory_name):
+    new_dir = Path(directory_name).resolve()
 
-    Parameters:
-        pipeline_name (str): 
-            The name of the built-in pipeline to be copied. 
-            Must match one of the pipelines returned by `bojai list --pipelines`.
-
-        directory (str): 
-            The destination path where the pipeline code should be copied. 
-            A new subdirectory named after the pipeline will be created inside this directory.
-
-    Behavior:
-        - Validates the pipeline name against available built-in pipelines.
-        - Creates the target directory if it doesn't exist.
-        - Copies all relevant files (e.g., model, training, config) from the built-in pipeline folder 
-          to the new destination subfolder.
-
-    Example:
-        modify_pipeline("text_classification", "/home/user/custom_pipelines")
-        # This creates:
-        # /home/user/custom_pipelines/text_classification/
-        #     ├── model.py
-        #     ├── preprocess.py
-        #     ├── train.py
-        #     └── config.yaml
-
-    Notes:
-        - Modifying the copied files has no effect on the original built-in pipelines.
-        - This is a convenient way to start from a working pipeline and make custom changes 
-          without writing boilerplate code from scratch.
-    """
-    pass
+    if not new_dir.exists() or not new_dir.is_dir():
+        # returns a message that directory_name wasn't found
+        print(f"Directory '{directory_name}' not found")
+        return
+    else:
+        moved_files = []
+        
+        for path in Path(f"{SCRIPT_DIR}/pbm/pbm_{pipeline_name}").iterdir():
+            if path.is_file():
+                dest = new_dir / path.name
+                shutil.copy(str(path), str(dest))
+                moved_files.append(dest)
+        
+        if pipeline_name:
+            # prints ;he files that were copied to directory_name and 
+            # a message that the checkout was completed successfully
+            for file_path in moved_files:
+                print(f"- {file_path.name} moved successfully")
+            print(f"All files for {pipeline_name} were checked out successfully to '{directory_name}' for you to modify.")
+        else:
+            # returns a message that the checkout was completed
+            return f"All files for {pipeline_name} were checked out successfully to '{directory_name}' for you to modify."   
 
 def main():
     parser = argparse.ArgumentParser(description="BojAI Command Line Interface")
