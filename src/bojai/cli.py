@@ -147,7 +147,41 @@ def list_pipelines(pipelines, builds):
                 ),
                 "|",
             )
-            
+
+# //
+# Inputs:
+# name of the directory that files need to be fetched to 
+# and whether the user wants to complete the checkout in "CLI" or "UI"
+#
+# Outputs:
+# returns the files that were copied to directory_name
+# //
+def checkout_directory(directory_name, cli_or_ui) :
+    new_dir = Path(directory_name).resolve()
+
+    if not new_dir.exists() or not new_dir.is_dir():
+        # returns a message that directory_name wasn't found
+        print(f"Directory '{directory_name}' not found")
+        return
+    
+    else:
+        moved_files = []
+        
+        for path in SCRIPT_DIR.iterdir():
+            if path.is_file():
+                dest = new_dir / path.name
+                shutil.copy(str(path), str(dest))
+                moved_files.append(dest)
+        
+        if cli_or_ui:
+            # prints ;he files that were copied to directory_name and 
+            # a message that the checkout was completed successfully
+            for file_path in moved_files:
+                print(f"- {file_path.name} moved successfully")
+            print(f"\nAll files in working directory were SUCCESSFULLY checked out into '{directory_name}'")
+        else:
+            # returns a message that the checkout was completed
+            return f"All files were checked out successfully to '{directory_name}'"           
 
 def main():
     parser = argparse.ArgumentParser(description="BojAI Command Line Interface")
@@ -178,6 +212,10 @@ def main():
     parser_list.add_argument("--pipelines", action="store_true")
     parser_list.add_argument("--builds", action="store_true")
 
+    parser_checkout = subparsers.add_parser("checkout", help = "Checkout an existing directory")
+    parser_checkout.add_argument("--directory", required = True)
+    parser_checkout.add_argument("--ui", action = "store_true")
+
     args = parser.parse_args()
 
     if args.command == "start":
@@ -193,6 +231,8 @@ def main():
         new_custom_pipeline(args.pipeline, args.directory)
     elif args.command == "list":
         list_pipelines(args.pipelines, args.builds)
+    elif args.command == "checkout":
+        checkout_directory(args.directory, "UI" if args.ui else "CLI")
 
 if __name__ == "__main__":
     main()
