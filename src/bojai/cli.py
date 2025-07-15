@@ -148,14 +148,6 @@ def list_pipelines(pipelines, builds):
                 "|",
             )
 
-# //
-# Inputs:
-# name of the directory that files need to be fetched to 
-# and whether the user wants to complete the checkout in "CLI" or "UI"
-#
-# Outputs:
-# returns the files that were copied to directory_name
-# //
 def checkout_directory(directory_name, cli_or_ui) :
     new_dir = Path(directory_name).resolve()
 
@@ -167,7 +159,7 @@ def checkout_directory(directory_name, cli_or_ui) :
     else:
         moved_files = []
         
-        for path in SCRIPT_DIR.iterdir():
+        for path in Path(f"{SCRIPT_DIR}/pipeline{cli_or_ui}").iterdir():
             if path.is_file():
                 dest = new_dir / path.name
                 shutil.copy(str(path), str(dest))
