@@ -2,7 +2,7 @@
 
 # === MOCKABLE PLACEHOLDERS ===
 torch = type("torch", (), {"save": lambda obj, path: print(f"[torch.save] {path}")})
-browseDict = {"eval_matrice": "Accuracy", "use_model_text": "Enter input for model:"}
+browseDict = {"eval matrice": "Accuracy", "use_model_text": "Enter input for model:"}
 getNewModel = lambda: "MockModel"
 getNewTokenizer = lambda: "MockTokenizer"
 
@@ -36,7 +36,7 @@ class BojaiDeployCLI:
         self.print_header("📈 Evaluate Model on Original Data")
         try:
             score = self.deploy.get_eval_score(0)
-            print(f"✅ {browseDict['eval_matrice']}: {score}")
+            print(f"✅ {browseDict['eval matrice']}: {score}")
         except Exception as e:
             print(f"❌ Failed to evaluate: {str(e)}")
 
@@ -47,7 +47,7 @@ class BojaiDeployCLI:
         self.print_header("📈 Evaluate Model on New Data")
         try:
             score = self.deploy.get_eval_score(1)
-            print(f"✅ {browseDict['eval_matrice']}: {score}")
+            print(f"✅ {browseDict['eval matrice']}: {score}")
         except Exception as e:
             print(f"❌ Failed to evaluate: {str(e)}")
 

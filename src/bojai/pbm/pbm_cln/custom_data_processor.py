@@ -1,8 +1,11 @@
 import os
+import torch
 from torch.utils.data import Dataset
 import numpy as np
 import json
 from processor import Processor
+
+
 
 class YourDataProcessor(Processor):
     def __init__(
@@ -20,18 +23,22 @@ class YourDataProcessor(Processor):
             data_dir, division, model, device, tokenizer, is_main, inputs, outputs
         )
 
-
     def get_inputs_outputs(self, data_dir):
         with open(self.data_dir, "r") as file:
-            matrix = file.readlines()
-        input = []
-        output = []
+            matrix = json.load(file)
 
-        for item in matrix: 
-            items = item.split(",")
-            input.append(items[0])
-            output.append(item[1])
-        return input, output
+        # Assuming the matrix is stored as a list of lists in the JSON
+
+        if matrix is None:
+            raise ValueError("The JSON file does not contain a valid matrix.")
+
+        matrix = np.array(matrix)
+
+        if matrix.size != 0:
+            inputs = matrix[:, :-1]
+            output = matrix[:, -1]
+
+        return inputs, output
 
     def get_train_eval(self):
 
@@ -43,9 +50,6 @@ class YourDataProcessor(Processor):
         train_indices = indices[:train_size]
         eval_indices = indices[train_size:]
 
-        self.inputs = np.array(self.inputs)
-        self.outputs = np.array(self.outputs)
-
         # Split inputs (n*d matrix) and outputs (n*1 vector)
         inputs_train = self.inputs[train_indices]
         inputs_eval = self.inputs[eval_indices]
@@ -55,9 +59,8 @@ class YourDataProcessor(Processor):
         return inputs_train, inputs_eval, outputs_train, outputs_eval
 
     def __getitem__(self, idx):
-        input = self.inputs[idx]
-        output = self.outputs[idx]
-
+        input = torch.tensor(self.inputs[idx], dtype=torch.float32)
+        output = torch.tensor(self.outputs[idx], dtype=torch.float32)
         return input, output
 
     def __len__(self):

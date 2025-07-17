@@ -12,6 +12,7 @@ from global_vars import (
 )
 from deployCLI import deploy_cli
 import sys
+from visualizer import Visualizer
 
 
 def print_header(title):
@@ -81,7 +82,7 @@ def evaluate_model(train: Train):
     print_header("📈 Model Evaluation")
     try:
         score = train.trainerManager.trainer.evaluate()
-        print(f"✅ Evaluation Result: {browseDict['eval_matrice']} = {score}")
+        print(f"✅ Evaluation Result: {browseDict['eval matrice']} = {score}")
     except Exception as e:
         print(f"❌ Evaluation failed: {str(e)}")
 
@@ -104,6 +105,26 @@ def init_deploy(train):
     deploy = Deploy(train, 100)
     deploy_cli(deploy)
 
+def visualize_model():
+    vis = Visualizer()
+    print("Visualization options:")
+    print("  [1] Plot Loss vs Epoch")
+    print("  [2] Plot Training vs Validation")
+    print("  [q] return")
+
+    choice = input("Choose one option: ")
+    if choice == "q":
+        return
+    
+    if choice not in ["1","2"]:
+        print("Enter a valid option")
+        visualize_model()
+        return
+    if choice == '1': 
+        vis.plot_loss()
+    else: 
+        vis.plot_validation_vs_training()
+        
 
 def train_cli(train: Train):
     print_header("🧠 Bojai Training CLI")
@@ -114,6 +135,7 @@ def train_cli(train: Train):
         print("\nAvailable actions:")
         print("  [t] Start training")
         print("  [u] Update hyperparameters")
+        print("  [v] Visualize loss, validation, and training metrices")
         print("  [e] Evaluate model")
         print("  [r] Replace model")
         print("  [d] Deploy model (if trained)")
@@ -142,6 +164,8 @@ def train_cli(train: Train):
             print("🔁 Returning to data preparation CLI...")
             prepare_cli(train.prep)
             print("✅ Returned to training stage.")
+        elif choice == "v":
+            visualize_model()
         elif choice == "q":
             print("👋 Exiting training stage.")
             sys.exit(0)
@@ -168,7 +192,7 @@ if __name__ == "__main__":
         data_address,
         task_type,
         (training_div, eval_div),
-        "",
+        "", [0,0,0]
     )
     hyperparams = hyper_params
     train = Train(prep, hyperparams)

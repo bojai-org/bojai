@@ -26,7 +26,7 @@ def getNewModel():
 
 
 def init_model(data, model, not_used=None):
-    n, d = data.processor.input_matrix.shape
+    n, d = data.processor.inputs.shape
     model.initialise(d)
 
 

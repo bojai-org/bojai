@@ -28,7 +28,7 @@ browseDict = {
     "use_model_text": "Enter one picture to see output",  # Label in UI
     "init": False,  # Whether to call init_model before training
     "type": 0,  # 0=image, 1=voice, 2=text/numbers
-    "eval_matrice": "perplexity",  # Evaluation metric to show in UI
+    "eval matrice": "perplexity",  # Evaluation metric to show in UI
     "options": 0,  # Whether the user needs to select from options
     "options-where": -1,  # Where options are applied: -1=nowhere, 0=tokenizer, 1=model
 }

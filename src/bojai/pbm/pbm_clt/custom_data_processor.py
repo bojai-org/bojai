@@ -20,6 +20,7 @@ class YourDataProcessor(Processor):
         super().__init__(
             data_dir, division, model, device, tokenizer, is_main, inputs, outputs
         )
+        self.combined = self.get_combined()
 
 
     def get_train_eval(self):
@@ -65,8 +66,12 @@ class YourDataProcessor(Processor):
         for i in range(len(outputs)):
             if outputs[i] == 2:
                 outputs[i] = 0
+    
+        return inputs, outputs
+    
+    def get_combined(self):
         combined = [
             f"input : {input_text}, output : {output_text}"
-            for input_text, output_text in zip(inputs, outputs)
+            for input_text, output_text in zip(self.inputs, self.outputs)
         ]
-        return inputs, outputs, combined
+        return combined

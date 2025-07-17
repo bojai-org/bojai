@@ -77,3 +77,6 @@ class YourDataProcessor(Processor):
 
     def __len__(self):
         return len(self.outputs)
+    
+    def get_item_untokenized(self, idx):
+        return self.inputs[idx], self.outputs[idx]

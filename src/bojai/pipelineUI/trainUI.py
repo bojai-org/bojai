@@ -126,6 +126,7 @@ class TrainWindow(QtWidgets.QWidget):
         update_layout = self.update_hyperparam_layout()
         self.main_layout.addLayout(update_layout, 5, 0)  # Hyperparameter section below
         self.main_layout.addLayout(self.replace_model_layout(), 6, 0)
+        self.main_layout.addLayout(self.visualize_model(), 7,0)
         self.setLayout(self.main_layout)
 
     def create_eval_layout(self):
@@ -158,7 +159,26 @@ class TrainWindow(QtWidgets.QWidget):
         eval_layout.addRow(eval_button)
 
         return eval_layout
+    
+    def visualize_model(self):
+        layout = QHBoxLayout()
 
+        visualize_button = QPushButton("Visualize Model")
+        visualize_button.setStyleSheet(
+            """
+            background-color: #642165;
+            color: white;
+            border-radius: 10px;
+            font-size: 14px;
+            padding: 5px;
+            """
+        )
+        visualize_button.setFixedSize(300, 35)
+        visualize_button.clicked.connect(self.open_visualizer_window)
+
+        layout.addWidget(visualize_button)
+        return layout
+    
     def replace_model_layout(self):
         replace_layout = QFormLayout()
         replace_layout.setSpacing(10)
@@ -625,6 +645,46 @@ class TrainWindow(QtWidgets.QWidget):
             msg.setText(f"An error occurred: {str(e)}")  # Display error message
             msg.exec_()
 
+    def open_visualizer_window(self):
+        try:
+            from visualizer import Visualizer
+
+            class VisualizerWindow(QtWidgets.QWidget):
+                def __init__(self, visualizer):
+                    super().__init__()
+                    self.visualizer = visualizer
+                    self.setWindowTitle("Model Visualizations")
+                    self.setGeometry(100, 100, 400, 300)
+                    layout = QVBoxLayout()
+
+                    title = QLabel("Choose a visualization")
+                    title.setAlignment(Qt.AlignCenter)
+                    title.setStyleSheet("font-size: 18px; font-weight: bold; color: black;")
+                    layout.addWidget(title)
+
+                    # Button 1: Loss vs Epoch
+                    loss_btn = QPushButton("Plot Loss vs Epoch")
+                    loss_btn.clicked.connect(self.visualizer.plot_loss)
+                    layout.addWidget(loss_btn)
+
+                    # Button 2: Train vs Validation
+                    val_train_btn = QPushButton("Plot Training vs Validation")
+                    val_train_btn.clicked.connect(self.visualizer.plot_validation_vs_training)
+                    layout.addWidget(val_train_btn)
+
+                    self.setLayout(layout)
+
+            visualizer = Visualizer()
+            self.vis_window = VisualizerWindow(visualizer)
+            self.vis_window.show()
+
+        except Exception as e:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Error")
+            msg.setText(f"Could not open visualizer window: {str(e)}")
+            msg.exec_()
+
 
 if __name__ == "__main__":
 
@@ -643,7 +703,7 @@ if __name__ == "__main__":
         data_address,
         task_type,
         (training_div, eval_div),
-        "",
+        "", [0,0,0]
     )
     hyperparams = hyper_params
     train = Train(prep, hyperparams)
