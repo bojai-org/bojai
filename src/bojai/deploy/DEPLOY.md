@@ -369,3 +369,101 @@ bojai deploy start cln-ml model.bin --port 8080
 3. **Model Optimization**: Use TorchScript or ONNX for faster inference
 4. **Caching**: Implement prediction result caching for repeated inputs
 
+## Deploying to Azure (User-Owned Container)
+
+BojAI supports secure, user-friendly deployment to Azure using your own Azure Container Registry (ACR) and Azure Container Instances (ACI). **All authentication is handled via Azure CLI (`az login`)—you never provide your password to BojAI.**
+
+### Prerequisites
+- Azure account: https://portal.azure.com
+- Azure CLI: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
+- Docker installed: https://docs.docker.com/get-docker/
+- You are logged in to Azure CLI: `az login`
+
+### Step-by-Step Guide
+
+1. **Login to Azure**
+   ```bash
+   az login
+   # This opens a browser window for secure Microsoft login (OAuth)
+   ```
+
+2. **Create a Resource Group (if needed)**
+   ```bash
+   az group create --name myResourceGroup --location eastus
+   ```
+
+3. **Create an Azure Container Registry (ACR)**
+   ```bash
+   az acr create --resource-group myResourceGroup --name myAcrName --sku Basic
+   ```
+
+4. **Get ACR credentials (for reference, not needed for BojAI)**
+   ```bash
+   az acr credential show --name myAcrName
+   ```
+
+5. **Build and push Docker image with BojAI CLI**
+   ```bash
+   bojai deploy start cln-ml my_model.bin --provider azure \
+     --acr-name myAcrName \
+     --resource-group myResourceGroup \
+     --region eastus \
+     --container-name bojai-api \
+     --dns-name-label mybojaiapi \
+     --port 8080
+   ```
+   - The CLI will prompt for any missing info.
+   - The CLI will build the Docker image, push it to your ACR, and deploy it to ACI.
+   - **You never provide your password or secret to BojAI.**
+
+6. **Access your API**
+   ```
+   http://mybojaiapi.eastus.azurecontainer.io:8080/ping
+   ```
+
+7. **Clean up resources (to avoid charges)**
+   ```bash
+   az container delete --name bojai-api --resource-group myResourceGroup
+   az group delete --name myResourceGroup
+   ```
+
+### Troubleshooting
+
+- **Not logged in to Azure CLI?**
+  - Run `az login` and complete the browser-based login.
+- **Docker not installed?**
+  - Install Docker from https://docs.docker.com/get-docker/
+- **ACR login fails?**
+  - Make sure your ACR name is correct and you are logged in to Azure CLI.
+- **Container not reachable?**
+  - Check the DNS name label and region. It may take a minute for the container to start.
+- **Port already in use?**
+  - Use a different port or delete the existing container.
+
+### Security Notes
+- BojAI never asks for your Azure password or secret.
+- All authentication is handled via Azure CLI (`az login`), which uses OAuth and supports MFA/SSO.
+- You control your own Azure resources and can delete them at any time.
+
+### Example Full Command
+```bash
+bojai deploy start cln-ml my_model.bin --provider azure \
+  --acr-name myAcrName \
+  --resource-group myResourceGroup \
+  --region eastus \
+  --container-name bojai-api \
+  --dns-name-label mybojaiapi \
+  --port 8080
+```
+
+This will:
+- Build and tag a Docker image for your model
+- Push it to your Azure Container Registry
+- Deploy it to Azure Container Instances
+- Print the public API endpoint for your deployed model
+
+**For more details, see the official Azure documentation:**
+- [Azure Container Registry](https://docs.microsoft.com/en-us/azure/container-registry/)
+- [Azure Container Instances](https://docs.microsoft.com/en-us/azure/container-instances/)
+- [Azure CLI Install](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+
