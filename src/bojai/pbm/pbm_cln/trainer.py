@@ -220,3 +220,6 @@ class Logger:
 
     def __str__(self):
         return f"Logs: {self.logs}\nEval: {self.eval}"
+
+    def set_logger(self, logs):
+        self.logs = logs

@@ -112,11 +112,11 @@ class TrainWindow(QtWidgets.QWidget):
         # Spacer for pushing buttons to the top
         bottom_spacer = QSpacerItem(20, 50, QSizePolicy.Minimum, QSizePolicy.Expanding)
         bar_layout.addSpacerItem(bottom_spacer)
-        info_layout = self.create_info_section()
         # Add sidebar_layout to main_layout
         self.main_layout.addLayout(
             bar_layout, 1, 0
         )  # Sidebar is in the left column, spans two rows
+        info_layout = self.create_info_section()
         self.main_layout.addLayout(info_layout, 2, 0)
         # Hyperparameter Update Section (Right Column)
         self.main_layout.addLayout(
@@ -157,6 +157,8 @@ class TrainWindow(QtWidgets.QWidget):
         self.load_button.setToolTip("Loads the selected session. It replaces the current model with the loaded session's model. To avoid losing the model, save the session or go to Deploy and save the model.")
         self.load_button.setFixedSize(180, 45)
         button_row.addWidget(self.load_button)
+
+        return button_row
 
 
     def get_unique_session_name(self):
@@ -210,6 +212,8 @@ class TrainWindow(QtWidgets.QWidget):
         session_name, ok = QtWidgets.QInputDialog.getText(self, "Load Session", "Enter the name of the session to load:")
         if ok and session_name:
             self.train.load(session_name)
+            info_layout = self.create_info_section()
+            self.main_layout.addLayout(info_layout, 2, 0)  # Hyperparameter section below
             msg = QMessageBox()
             msg.setWindowTitle("Session Loaded")
             msg.setText(f"Session '{session_name}' loaded.")

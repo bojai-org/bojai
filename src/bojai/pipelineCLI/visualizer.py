@@ -28,9 +28,8 @@ class Visualizer:
         epochs = sorted(self.logger.get_logs().keys())
         if -1 in epochs:
             epochs.remove(-1)
-        print(epochs)
-        print(self.logger.get_logs()[0])
-        print(self.logger.get_logs()[0])
+        if '-1' in epochs:
+            epochs.remove('-1')
         train_losses = [self.logger.get_logs()[ep].get('loss') for ep in epochs]
         ax.plot(epochs, train_losses, label='Training Loss')
         ax.set_xlabel('Epoch')
@@ -48,8 +47,8 @@ class Visualizer:
         epochs = sorted(self.logger.get_logs().keys())
         if -1 in epochs:
             epochs.remove(-1)
-        print(self.logger.get_logs()[0])
-        print(self.logger.get_logs()[0])
+        if '-1' in epochs:
+            epochs.remove('-1')
         train = [self.logger.get_logs()[ep].get('train') for ep in epochs]
         valid = [self.logger.get_logs()[ep].get('valid') for ep in epochs]
         ax.plot(epochs, train, label='Training Loss')
@@ -70,6 +69,8 @@ class Visualizer:
         epochs = sorted(logs.keys())
         if -1 in epochs:
             epochs.remove(-1)
+        if '-1' in epochs:
+            epochs.remove('-1')
         train_scores = [logs[ep].get('train', 0) for ep in epochs]
         mean_train_score = mean(train_scores)
 
@@ -99,6 +100,8 @@ class Visualizer:
         epochs = sorted(logs.keys())
         if -1 in epochs:
             epochs.remove(-1)
+        if '-1' in epochs:
+            epochs.remove('-1')
         train_scores = [logs[ep].get('valid', 0) for ep in epochs]
         mean_train_score = mean(train_scores)
 

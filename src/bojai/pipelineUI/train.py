@@ -78,8 +78,7 @@ class Train:
         session_info = {
             'model_name': getattr(self.model, '__class__', type(self.model)).__name__,
             'hyperparameters': self.hyper_params,
-            'loss_logs': getattr(self.trainerManager.trainer, 'loss_logs', []),
-            'eval_logs': getattr(self.trainerManager.trainer, 'eval_logs', []),
+            'loggs': self.trainerManager.trainer.logger.get_logs(),
             'timestamp': datetime.now().isoformat(),
             'model_weights': os.path.basename(weights_path)
         }
@@ -97,6 +96,7 @@ class Train:
             return
         with open(json_path, 'r') as f:
             session_info = json.load(f)
-        self.trainerManager.trainer.loss_logs = session_info.get('loss_logs', [])
-        self.trainerManager.trainer.eval_logs = session_info.get('eval_logs', [])
+        self.edit_hyperparams(session_info.get('hyperparameters', []))
+        self.trainerManager.trainer.logger.set_logger(session_info.get('loggs', []))
+        print(self.trainerManager.trainer.logger.get_logs())
         self.model.load_state_dict(torch.load(weights_path))
