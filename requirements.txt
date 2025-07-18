@@ -11,3 +11,8 @@ Requests==2.32.3
 scikit_learn==1.6.1
 torch==2.3.0
 transformers==4.41.2
+azure-identity==1.16.0
+azure-mgmt-resource==23.0.0
+azure-mgmt-containerinstance==10.1.0
+azure-mgmt-containerregistry==10.1.0
+docker==7.0.0

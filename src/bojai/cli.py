@@ -3,9 +3,13 @@ import shutil
 import subprocess
 import os
 from pathlib import Path
+import logging
 
 # Base directory where this script lives
 SCRIPT_DIR = Path(__file__).resolve().parent
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def build_pipeline(pipeline_name, directory_arg, replace):
     workspace_dir = SCRIPT_DIR / "applets" / f"bm_{pipeline_name}"
@@ -191,23 +195,28 @@ def main():
     parser = argparse.ArgumentParser(description="BojAI Command Line Interface")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    # Start command
     parser_start = subparsers.add_parser("start", help="Start a pipeline")
     parser_start.add_argument("--pipeline", required=True)
     parser_start.add_argument("--stage", default="initialise")
     parser_start.add_argument("--ui", action="store_true")
 
+    # Build command
     parser_build = subparsers.add_parser("build", help="Build a pipeline")
     parser_build.add_argument("--pipeline", required=True)
     parser_build.add_argument("--replace", action="store_true", help="Overwrite existing build")
     parser_build.add_argument("--directory", default="none", help="Comma-separated custom pipeline directories")
 
+    # Remove command
     parser_remove = subparsers.add_parser("remove", help="Remove a built pipeline")
     parser_remove.add_argument("--pipeline", required=True)
 
+    # Create command
     parser_create = subparsers.add_parser("create", help="Create a new custom pipeline")
     parser_create.add_argument("--pipeline", required=True)
     parser_create.add_argument("--directory", required=True)
 
+    # List command
     parser_list = subparsers.add_parser("list", help="List available/built pipelines")
     parser_list.add_argument("--pipelines", action="store_true")
     parser_list.add_argument("--builds", action="store_true")
@@ -219,6 +228,24 @@ def main():
     parser_checkout = subparsers.add_parser("checkout", help = "Checkout an existing directory")
     parser_checkout.add_argument("--directory", required = True)
     parser_checkout.add_argument("--ui", action = "store_true")
+    # Deploy command
+    parser_deploy = subparsers.add_parser("deploy", help="Deploy a pipeline as an API")
+    deploy_subparsers = parser_deploy.add_subparsers(dest="deploy_command", required=True)
+
+    # Deploy start
+    deploy_start = deploy_subparsers.add_parser("start", help="Start a pipeline API server")
+    deploy_start.add_argument("pipeline", help="Name of the pipeline to start")
+    deploy_start.add_argument("model_path", help="Path to the trained model file (.bin)")
+    deploy_start.add_argument("--port", "-p", type=int, default=8000, help="Port to run the API server on")
+    deploy_start.add_argument("--host", default="127.0.0.1", help="Host to run the API server on")
+
+    # Deploy stop
+    deploy_stop = deploy_subparsers.add_parser("stop", help="Stop a running pipeline API server")
+    deploy_stop.add_argument("pipeline", help="Name of the pipeline to stop")
+
+    # Deploy status
+    deploy_status = deploy_subparsers.add_parser("status", help="Get status of deployed pipelines")
+    deploy_status.add_argument("pipeline", nargs="?", help="Name of the pipeline to check status")
 
     args = parser.parse_args()
 
@@ -236,6 +263,15 @@ def main():
         modify_pipeline(args.pipeline, args.directory)
     elif args.command == "checkout":
         checkout_directory(args.directory, "UI" if args.ui else "CLI")
+    elif args.command == "deploy":
+        from bojai.deploy.cli import start_pipeline, stop_pipeline, get_pipeline_status
+        
+        if args.deploy_command == "start":
+            start_pipeline(args)
+        elif args.deploy_command == "stop":
+            stop_pipeline(args)
+        elif args.deploy_command == "status":
+            get_pipeline_status(args)
 
 if __name__ == "__main__":
     main()
