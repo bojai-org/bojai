@@ -13,6 +13,11 @@ from global_vars import (
 from deployCLI import deploy_cli
 import sys
 
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
+
 
 def print_header(title):
     print("\n" + "=" * 60)
@@ -57,7 +62,6 @@ def train_model(train: Train):
 
     trainer = train.trainerManager.trainer
     try:
-        # mimics the behavior of PyQt's signal-based threading system in a headless CLI context
         class progressCallback:
             def emit(self, progress):
                 print(f"🟣 Progress: {progress}%", end="\r")
@@ -66,10 +70,9 @@ def train_model(train: Train):
             def emit(self, loss):
                 print(f"💥 Loss: {loss:.4f}", end="\r")
 
-        # Dummy QThread object with just .msleep()
         class dummyQThread:
             def msleep(self, _):
-                pass  # No need to sleep in CLI context
+                pass
 
         trainer.train(dummyQThread(), progressCallback(), lossCallback())
         print("\n✅ Training complete.")
@@ -105,6 +108,74 @@ def init_deploy(train):
     deploy_cli(deploy)
 
 
+def save_session(train):
+    session_name = input("Enter a session name to save: ").strip()
+    if session_name:
+        try:
+            train.save(session_name)
+            print(f"✅ Session saved as '{session_name}_model.pt'")
+        except Exception as e:
+            print(f"❌ Failed to save session: {str(e)}")
+    else:
+        print("❌ Session name cannot be empty.")
+
+def load_session(train):
+    session_name = input("Enter a session name to load: ").strip()
+    if session_name:
+        try:
+            import os
+            filename = f"{session_name}_model.pt"
+            if not os.path.exists(filename):
+                print(f"❌ No saved session found with name '{session_name}'.")
+                return
+            train.load()
+            print(f"✅ Session '{session_name}_model.pt' loaded.")
+        except Exception as e:
+            print(f"❌ Failed to load session: {str(e)}")
+    else:
+        print("❌ Session name cannot be empty.")
+
+
+def get_unique_session_name():
+    import os
+    save_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../train_sessions'))
+    while True:
+        session_name = input("Enter a name for this training session: ").strip()
+        if not session_name:
+            print("❌ Session name cannot be empty.")
+            continue
+        weights_path = os.path.join(save_dir, f'{session_name}_model.bin')
+        json_path = os.path.join(save_dir, f'{session_name}_session.json')
+        if os.path.exists(weights_path) or os.path.exists(json_path):
+            print(f"❌ Session name '{session_name}' already exists. Please choose another name.")
+        else:
+            return session_name
+
+
+def visualize_training(train):
+    if plt is None:
+        print("matplotlib is not installed. Please install it to use visualization features.")
+        return
+    loss_logs = getattr(train.trainerManager.trainer, 'loss_logs', [])
+    eval_logs = getattr(train.trainerManager.trainer, 'eval_logs', [])
+    if not loss_logs and not eval_logs:
+        print("No training or evaluation logs found.")
+        return
+    epochs = list(range(1, max(len(loss_logs), len(eval_logs)) + 1))
+    plt.figure(figsize=(10, 6))
+    if loss_logs:
+        plt.plot(range(1, len(loss_logs)+1), loss_logs, label='Training Loss', marker='o')
+    if eval_logs:
+        plt.plot(range(1, len(eval_logs)+1), eval_logs, label='Evaluation Loss', marker='x')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training and Evaluation Loss over Epochs')
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
 def train_cli(train: Train):
     print_header("🧠 Bojai Training CLI")
     trained = False
@@ -117,6 +188,9 @@ def train_cli(train: Train):
         print("  [e] Evaluate model")
         print("  [r] Replace model")
         print("  [d] Deploy model (if trained)")
+        print("  [s] Save session")
+        print("  [l] Load session")
+        print("  [v] Visualize training")
         print("  [p] ⬅️  Go back to data preparation")
         print("  [q] Quit")
 
@@ -136,6 +210,19 @@ def train_cli(train: Train):
                 print("❌ Please train your model first before deploying.")
             else:
                 init_deploy(train)
+        elif choice == "s":
+            session_name = get_unique_session_name()
+            train.save(session_name)
+            print(f"Session '{session_name}' saved.")
+        elif choice == "l":
+            save_first = input("Do you want to save the current session before loading? (y/n): ").strip().lower()
+            if save_first == "y":
+                session_name_save = get_unique_session_name()
+                train.save(session_name_save)
+                print(f"Session '{session_name_save}' saved.")
+            session_name = input("Enter the name of the session to load: ").strip()
+            train.load(session_name)
+            print(f"Session '{session_name}' loaded.")
         elif choice == "p":
             from prepareCLI import prepare_cli
 
@@ -143,8 +230,15 @@ def train_cli(train: Train):
             prepare_cli(train.prep)
             print("✅ Returned to training stage.")
         elif choice == "q":
+            save_before_exit = input("Do you want to save the current training session before quitting? (y/n): ").strip().lower()
+            if save_before_exit == "y":
+                session_name = get_unique_session_name()
+                train.save(session_name)
+                print(f"Session '{session_name}' saved.")
             print("👋 Exiting training stage.")
             sys.exit(0)
+        elif choice == "v":
+            visualize_training(train)
         else:
             print("❌ Invalid choice.")
 

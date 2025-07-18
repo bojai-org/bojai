@@ -39,6 +39,8 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtCore import QThread, pyqtSignal, Qt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import matplotlib.pyplot as plt
 
 
 class TrainingThread(QThread):
@@ -80,7 +82,7 @@ class TrainWindow(QtWidgets.QWidget):
         title = QLabel("BojAI Vexor - Training")
         title.setStyleSheet("font-size: 24px; font-weight: bold; color: black;")
         title.setAlignment(QtCore.Qt.AlignLeft)
-        self.main_layout.addWidget(title)
+        self.main_layout.addWidget(title, 0, 0)
 
         # Sidebar Layout (buttons and model info)
         self.bar = QFrame()
@@ -107,24 +109,21 @@ class TrainWindow(QtWidgets.QWidget):
         bar_layout.addWidget(button_deploy)
         button_deploy.setFixedSize(150, 45)
 
-        self.main_layout.addWidget(self.bar)
+        self.main_layout.addWidget(self.bar, 1, 0)
 
-        # Spacer for pushing buttons to the top
         bottom_spacer = QSpacerItem(20, 50, QSizePolicy.Minimum, QSizePolicy.Expanding)
         bar_layout.addSpacerItem(bottom_spacer)
         info_layout = self.create_info_section()
-        # Add sidebar_layout to main_layout
         self.main_layout.addLayout(
             bar_layout, 1, 0
-        )  # Sidebar is in the left column, spans two rows
+        )
         self.main_layout.addLayout(info_layout, 2, 0)
-        # Hyperparameter Update Section (Right Column)
         self.main_layout.addLayout(
             self.create_train_section(), 3, 0
-        )  # Data section above
+        ) 
         self.main_layout.addLayout(self.create_eval_layout(), 4, 0)
         update_layout = self.update_hyperparam_layout()
-        self.main_layout.addLayout(update_layout, 5, 0)  # Hyperparameter section below
+        self.main_layout.addLayout(update_layout, 5, 0)
         self.main_layout.addLayout(self.replace_model_layout(), 6, 0)
         self.setLayout(self.main_layout)
 
@@ -308,7 +307,7 @@ class TrainWindow(QtWidgets.QWidget):
         layout.addWidget(self.progress_bar)
 
         # Loss label
-        self.loss_label = QLabel("Loss: N/A")  # NEW: Display loss
+        self.loss_label = QLabel("Loss: N/A")  # Display loss
         self.loss_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.loss_label)
 
@@ -339,7 +338,7 @@ class TrainWindow(QtWidgets.QWidget):
         self.progress_bar.setValue(progress)
 
     def update_loss(self, loss):
-        self.loss_label.setText(f"Loss: {loss:.4f}")  # Update UI label
+        self.loss_label.setText(f"Loss: {loss:.4f}")
 
     def cancel_training(self):
         # Optionally, handle the cancellation of training here
@@ -363,7 +362,6 @@ class TrainWindow(QtWidgets.QWidget):
 
         update_title = QLabel("Update Hyperparameters")
         update_title.setStyleSheet("font-size: 16px; color: black; font-weight: bold;")
-
         update_layout.addRow(update_title)
 
         description = QLabel("Change the vlaues of the hyperparameters listed below.")
@@ -378,53 +376,58 @@ class TrainWindow(QtWidgets.QWidget):
                 param_name,
                 param_value,
             ) in self.train.trainerManager.hyperparams.items():
-                # Create a label with the hyperparameter name
                 label = QLabel(param_name)
-                label.setStyleSheet("font-size: 16px; color: black;")
-
-                # Create an input field for updating the hyperparameter value
-                input_field = QLineEdit()
-                input_field.setStyleSheet(
-                    """
-                    background-color: white;
-                    color: black;
-                    border-radius: 10px;
-                    padding: 10px;
-                    font-size: 16px;
-                """
-                )
-
-                # Store the input fields in the list
+                label.setStyleSheet("font-size: 14px; color: black;")
+                input_field = QLineEdit(str(param_value))
+                input_field.setStyleSheet("font-size: 14px;")
                 self.hyperparam_inputs.append(input_field)
-
-                # Add the label and input field as a row in the form layout
-                update_layout.addRow(label)
-                update_layout.addRow(input_field)
-
+                update_layout.addRow(label, input_field)
         except Exception as e:
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
             msg.setWindowTitle("Error")
-            msg.setText(f"An error occurred: {str(e)}")  # Display error message
+            msg.setText(f"An error occurred: {str(e)}")
             msg.exec_()
 
-        # Create the "Update Hyperparameters" button
         self.update_button = QPushButton("Update Hyperparameters")
-        self.update_button.setStyleSheet(
-            """
+        self.update_button.setStyleSheet(self.default_style())
+        self.update_button.clicked.connect(self.update_hyperparams)
+        update_layout.addRow(self.update_button)
+
+        button_row = QHBoxLayout()
+
+        purple_button_style = """
+        QPushButton {
             background-color: #642165;
             color: white;
             border-radius: 10px;
             font-size: 14px;
             padding: 5px;
+        }
         """
-        )
-        self.update_button.clicked.connect(
-            self.update_hyperparams
-        )  # Connect to the update function
 
-        update_layout.addRow(self.update_button)
+        self.save_button = QPushButton("save session")
+        self.save_button.setStyleSheet(purple_button_style)
+        self.save_button.clicked.connect(self.save_session)
+        self.save_button.setToolTip("Saves the current training session, including the model name, hyperparameters, loss and eval logs, the model weights (in a .bin file), and the timestamp of when the session was saved.")
+        self.save_button.setFixedSize(180, 45)
+        button_row.addWidget(self.save_button)
 
+        self.load_button = QPushButton("load session")
+        self.load_button.setStyleSheet(purple_button_style)
+        self.load_button.clicked.connect(self.load_session)
+        self.load_button.setToolTip("Loads the selected session. It replaces the current model with the loaded session's model. To avoid losing the model, save the session or go to Deploy and save the model.")
+        self.load_button.setFixedSize(180, 45)
+        button_row.addWidget(self.load_button)
+
+        self.visualize_button = QPushButton("visualize model")
+        self.visualize_button.setStyleSheet(purple_button_style)
+        self.visualize_button.clicked.connect(self.show_visualization_window)
+        self.visualize_button.setToolTip("Opens a new window and shows graphs related to training. This includes training vs evaluation loss, loss over time, and more.")
+        self.visualize_button.setFixedSize(180, 45)
+        button_row.addWidget(self.visualize_button)
+
+        update_layout.addRow(button_row)
         return update_layout
 
     def update_hyperparams(self):
@@ -473,16 +476,91 @@ class TrainWindow(QtWidgets.QWidget):
             msg = QMessageBox()
             msg.setIcon(QMessageBox.Critical)
             msg.setWindowTitle("Error")
-            msg.setText(f"An error occurred: {str(e)}")  # Display error message
+            msg.setText(f"An error occurred: {str(e)}")
             msg.exec_()
 
         info_layout_new = self.create_info_section()
         self.main_layout.addLayout(info_layout_new, 2, 0)
 
-        # Optionally, show a message box confirming the update
         QtWidgets.QMessageBox.information(
             self, "Success", "Hyperparameters updated successfully!"
         )
+
+    def get_unique_session_name(self):
+        import os
+        save_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../train_sessions'))
+        while True:
+            session_name, ok = QtWidgets.QInputDialog.getText(self, "Save Session", "Enter a name for this training session:")
+            if not ok or not session_name:
+                return None, False
+            weights_path = os.path.join(save_dir, f'{session_name}_model.bin')
+            json_path = os.path.join(save_dir, f'{session_name}_session.json')
+            if os.path.exists(weights_path) or os.path.exists(json_path):
+                msg = QMessageBox()
+                msg.setWindowTitle("Name Exists")
+                msg.setText(f"Session name '{session_name}' already exists. Please choose another name.")
+                msg.setIcon(QMessageBox.Warning)
+                msg.exec_()
+            else:
+                return session_name, True
+
+    def save_session(self):
+        session_name, ok = self.get_unique_session_name()
+        if ok and session_name:
+            self.train.save(session_name)
+            msg = QMessageBox()
+            msg.setWindowTitle("Session Saved")
+            msg.setText(f"Session '{session_name}' saved.")
+            msg.setIcon(QMessageBox.Information)
+            msg.exec_()
+
+    def load_session(self):
+        save_reply = QtWidgets.QMessageBox.question(
+            self,
+            "Save Current Session",
+            "Do you want to save the current session before loading a new one?",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel
+        )
+        if save_reply == QtWidgets.QMessageBox.Cancel:
+            return
+        if save_reply == QtWidgets.QMessageBox.Yes:
+            session_name_save, ok = self.get_unique_session_name()
+            if ok and session_name_save:
+                self.train.save(session_name_save)
+                msg = QMessageBox()
+                msg.setWindowTitle("Session Saved")
+                msg.setText(f"Session '{session_name_save}' saved.")
+                msg.setIcon(QMessageBox.Information)
+                msg.exec_()
+        session_name, ok = QtWidgets.QInputDialog.getText(self, "Load Session", "Enter the name of the session to load:")
+        if ok and session_name:
+            self.train.load(session_name)
+            msg = QMessageBox()
+            msg.setWindowTitle("Session Loaded")
+            msg.setText(f"Session '{session_name}' loaded.")
+            msg.setIcon(QMessageBox.Information)
+            msg.exec_()
+
+    def closeEvent(self, event):
+        save_reply = QtWidgets.QMessageBox.question(
+            self,
+            "Save Current Session",
+            "Do you want to save the current training session before quitting?",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel
+        )
+        if save_reply == QtWidgets.QMessageBox.Cancel:
+            event.ignore()
+            return
+        if save_reply == QtWidgets.QMessageBox.Yes:
+            session_name, ok = self.get_unique_session_name()
+            if ok and session_name:
+                self.train.save(session_name)
+                msg = QMessageBox()
+                msg.setWindowTitle("Session Saved")
+                msg.setText(f"Session '{session_name}' saved.")
+                msg.setIcon(QMessageBox.Information)
+                msg.exec_()
+        event.accept()
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
@@ -624,6 +702,38 @@ class TrainWindow(QtWidgets.QWidget):
             msg.setWindowTitle("Error")
             msg.setText(f"An error occurred: {str(e)}")  # Display error message
             msg.exec_()
+
+    def show_visualization_window(self):
+        loss_logs = getattr(self.train.trainerManager.trainer, 'loss_logs', [])
+        eval_logs = getattr(self.train.trainerManager.trainer, 'eval_logs', [])
+        if not loss_logs and not eval_logs:
+            msg = QMessageBox()
+            msg.setWindowTitle("No Logs")
+            msg.setText("No training or evaluation logs found.")
+            msg.setIcon(QMessageBox.Warning)
+            msg.exec_()
+            return
+        viz_window = QDialog(self)
+        viz_window.setWindowTitle("Training Visualization")
+        layout = QVBoxLayout()
+        fig, ax = plt.subplots(figsize=(8, 5))
+        if loss_logs:
+            ax.plot(range(1, len(loss_logs)+1), loss_logs, label='Training Loss', marker='o')
+        if eval_logs:
+            ax.plot(range(1, len(eval_logs)+1), eval_logs, label='Evaluation Loss', marker='x')
+        ax.set_xlabel('Epoch')
+        ax.set_ylabel('Loss')
+        ax.set_title('Training and Evaluation Loss over Epochs')
+        ax.legend()
+        ax.grid(True)
+        fig.tight_layout()
+        canvas = FigureCanvas(fig)
+        layout.addWidget(canvas)
+        close_btn = QPushButton("Close")
+        close_btn.clicked.connect(viz_window.close)
+        layout.addWidget(close_btn)
+        viz_window.setLayout(layout)
+        viz_window.exec_()
 
 
 if __name__ == "__main__":

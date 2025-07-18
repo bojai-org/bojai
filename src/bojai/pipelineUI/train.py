@@ -101,3 +101,40 @@ class Train:
             self.hyper_params,
         )
         return manager
+
+    def save(self, session_name):
+        import torch
+        import os
+        import json
+        from datetime import datetime
+        save_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../train_sessions'))
+        os.makedirs(save_dir, exist_ok=True)
+        weights_path = os.path.join(save_dir, f'{session_name}_model.bin')
+        torch.save(self.model.state_dict(), weights_path)
+        session_info = {
+            'model_name': getattr(self.model, '__class__', type(self.model)).__name__,
+            'hyperparameters': self.hyper_params,
+            'loss_logs': getattr(self.trainerManager.trainer, 'loss_logs', []),
+            'eval_logs': getattr(self.trainerManager.trainer, 'eval_logs', []),
+            'timestamp': datetime.now().isoformat(),
+            'model_weights': os.path.basename(weights_path)
+        }
+        json_path = os.path.join(save_dir, f'{session_name}_session.json')
+        with open(json_path, 'w') as f:
+            json.dump(session_info, f, indent=2)
+
+    def load(self, session_name):
+        import torch
+        import os
+        import json
+        save_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../train_sessions'))
+        json_path = os.path.join(save_dir, f'{session_name}_session.json')
+        weights_path = os.path.join(save_dir, f'{session_name}_model.bin')
+        if not os.path.exists(json_path) or not os.path.exists(weights_path):
+            print(f'Session files for "{session_name}" not found.')
+            return
+        with open(json_path, 'r') as f:
+            session_info = json.load(f)
+        self.trainerManager.trainer.loss_logs = session_info.get('loss_logs', [])
+        self.trainerManager.trainer.eval_logs = session_info.get('eval_logs', [])
+        self.model.load_state_dict(torch.load(weights_path))
