@@ -1,12 +1,20 @@
 import argparse
 import shutil
 import subprocess
+import os
 from pathlib import Path
 
 # Base directory where this script lives
 SCRIPT_DIR = Path(__file__).resolve().parent
 
-
+def update_pipeline_logic(code: str) -> str:
+    # Placeholder: Add custom logic here
+    # e.g., inject new steps, modify config, etc.
+    if "# New Step Placeholder" in code:
+        return code.replace("# New Step Placeholder", "def new_step():\n    print('New step added')")
+    
+    # Implementation goes here
+    pass
 def build_pipeline(pipeline_name, replace):
     workspace_dir = SCRIPT_DIR / "applets" / f"bm_{pipeline_name}"
 
@@ -147,20 +155,32 @@ def list_pipelines(pipelines, builds):
                 ),
                 "|",
             )
-# //
-# Inputs:
-# name of the pipline that needs to be fetched
-# and whether the user wants to checkout the pipeline in "CLI" or "UI"
-#
-# Outputs:
-# if "CLI": returns the command line needed to run the pipeline 
-# else if "UI": returns a UI configuratoin that shows 
-#               info about the pipeline including the 
-#               steps that have been run on it and 
-#               the directories of its files 
-# //
-def checkout_pipelines(pipeline_name, cli_or_ui) :
-    pass
+
+def modify_pipeline(pipeline_name, directory_name):
+    new_dir = Path(directory_name).resolve()
+
+    if not new_dir.exists() or not new_dir.is_dir():
+        # returns a message that directory_name wasn't found
+        print(f"Directory '{directory_name}' not found")
+        return
+    else:
+        moved_files = []
+        
+        for path in Path(f"{SCRIPT_DIR}/pbm/pbm_{pipeline_name}").iterdir():
+            if path.is_file():
+                dest = new_dir / path.name
+                shutil.copy(str(path), str(dest))
+                moved_files.append(dest)
+        
+        if pipeline_name:
+            # prints ;he files that were copied to directory_name and 
+            # a message that the checkout was completed successfully
+            for file_path in moved_files:
+                print(f"- {file_path.name} moved successfully")
+            print(f"All files for {pipeline_name} were checked out successfully to '{directory_name}' for you to modify.")
+        else:
+            # returns a message that the checkout was completed
+            return f"All files for {pipeline_name} were checked out successfully to '{directory_name}' for you to modify."   
 
 def main():
     parser = argparse.ArgumentParser(description="BojAI Command Line Interface")
@@ -191,6 +211,10 @@ def main():
     parser_list.add_argument("--pipelines", action="store_true")
     parser_list.add_argument("--builds", action="store_true")
 
+    parser_modify = subparsers.add_parser('modify', help='Modify an existing pipeline')
+    parser_modify.add_argument('--pipeline', required=True, help='Name of the pipeline to modify')
+    parser_modify.add_argument('--directory', required=True, help='Directory to which the pipeline will be copied')
+
     args = parser.parse_args()
 
     if args.command == "start":
@@ -205,6 +229,9 @@ def main():
     elif args.command == "create":
         new_custom_pipeline(args.pipeline, args.directory)
     elif args.command == "list":
-        list_pipelines(args.pipelines, args.builds) 
+        list_pipelines(args.pipelines, args.builds)
+    elif args.command == 'modify':
+        modify_pipeline(args.pipeline, args.directory)
+
 if __name__ == "__main__":
     main()
