@@ -1,9 +1,9 @@
 from prepare import Prepare
 import psutil
 import torch
-import requests
-import importlib.util
-from cryptography.fernet import Fernet
+import json
+from datetime import datetime
+import os
 from trainer import TrainingManager
 from global_vars import init_model
 
@@ -70,34 +70,33 @@ class Train:
 
         return "Unknown device type"
 
-    def get_manager(self):
-        url = "https://desolate-beach-94387-f004ff3976e8.herokuapp.com/"
-        # Download the encrypted model
-        response = requests.get(url + "/get_trainer?a=cli")
-        with open("trainer_encrypted.pyc", "wb") as f:
-            f.write(response.content)
+    def save(self, session_name):
+        save_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../train_sessions'))
+        os.makedirs(save_dir, exist_ok=True)
+        weights_path = os.path.join(save_dir, f'{session_name}_model.bin')
+        torch.save(self.model.state_dict(), weights_path)
+        session_info = {
+            'model_name': getattr(self.model, '__class__', type(self.model)).__name__,
+            'hyperparameters': self.hyper_params,
+            'loss_logs': getattr(self.trainerManager.trainer, 'loss_logs', []),
+            'eval_logs': getattr(self.trainerManager.trainer, 'eval_logs', []),
+            'timestamp': datetime.now().isoformat(),
+            'model_weights': os.path.basename(weights_path)
+        }
+        json_path = os.path.join(save_dir, f'{session_name}_session.json')
+        with open(json_path, 'w') as f:
+            json.dump(session_info, f, indent=2)
 
-        # Decrypt the model
-        with open("trainer_encrypted.pyc", "rb") as f:
-            decrypted_code = Fernet(self.prep.key).decrypt(f.read())
+    def load(self, session_name):
 
-        # Save the decrypted model temporarily
-        with open("trainer.pyc", "wb") as f:
-            f.write(decrypted_code)
-
-        # Load the model dynamically
-        spec = importlib.util.spec_from_file_location("trainer", "trainer.pyc")
-        model_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(model_module)
-
-        # Instantiate the class
-        manager = model_module.TrainingManager(
-            self.prep.task_type,
-            self.model,
-            self.eval,
-            self.training,
-            self.device,
-            self.tokenizer,
-            self.hyper_params,
-        )
-        return manager
+        save_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../train_sessions'))
+        json_path = os.path.join(save_dir, f'{session_name}_session.json')
+        weights_path = os.path.join(save_dir, f'{session_name}_model.bin')
+        if not os.path.exists(json_path) or not os.path.exists(weights_path):
+            print(f'Session files for "{session_name}" not found.')
+            return
+        with open(json_path, 'r') as f:
+            session_info = json.load(f)
+        self.trainerManager.trainer.loss_logs = session_info.get('loss_logs', [])
+        self.trainerManager.trainer.eval_logs = session_info.get('eval_logs', [])
+        self.model.load_state_dict(torch.load(weights_path))

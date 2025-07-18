@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+import os
+import json
+from datetime import datetime
 # ───────────────────────────────────────────────────────────────────────────────
 # TrainingManager: Chooses the right Trainer for your model and passes it what it needs
 # ───────────────────────────────────────────────────────────────────────────────
@@ -82,7 +85,7 @@ class Trainer(ABC):
         self.model = model
         self.device = device
         self.tokenizer = tokenizer
-        self.hyper_params = hyper_params.keys()
+        self.hyper_params = hyper_params  # Store the dict, not dict_keys
 
     @abstractmethod
     def train(self, qthread, progress_worker, loss_worker):

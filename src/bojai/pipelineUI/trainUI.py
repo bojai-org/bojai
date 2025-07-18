@@ -126,8 +126,95 @@ class TrainWindow(QtWidgets.QWidget):
         update_layout = self.update_hyperparam_layout()
         self.main_layout.addLayout(update_layout, 5, 0)  # Hyperparameter section below
         self.main_layout.addLayout(self.replace_model_layout(), 6, 0)
-        self.main_layout.addLayout(self.visualize_model(), 7,0)
+        self.main_layout.addLayout(self.save_load_session_layout(), 7,0)
+        self.main_layout.addLayout(self.visualize_model(), 8,0)
         self.setLayout(self.main_layout)
+    
+    def save_load_session_layout(self):
+        purple_button_style = """
+        QPushButton {
+            background-color: #642165;
+            color: white;
+            border-radius: 10px;
+            font-size: 14px;
+            padding: 5px;
+        }
+        """
+        button_row = QHBoxLayout()
+
+
+        self.save_button = QPushButton("save session")
+        self.save_button.setStyleSheet(purple_button_style)
+        self.save_button.clicked.connect(self.save_session)
+        self.save_button.setToolTip("Saves the current training session, including the model name, hyperparameters, loss and eval logs, the model weights (in a .bin file), and the timestamp of when the session was saved.")
+        self.save_button.setFixedSize(180, 45)
+        button_row.addWidget(self.save_button)
+
+
+        self.load_button = QPushButton("load session")
+        self.load_button.setStyleSheet(purple_button_style)
+        self.load_button.clicked.connect(self.load_session)
+        self.load_button.setToolTip("Loads the selected session. It replaces the current model with the loaded session's model. To avoid losing the model, save the session or go to Deploy and save the model.")
+        self.load_button.setFixedSize(180, 45)
+        button_row.addWidget(self.load_button)
+
+
+    def get_unique_session_name(self):
+        import os
+        save_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../train_sessions'))
+        while True:
+            session_name, ok = QtWidgets.QInputDialog.getText(self, "Save Session", "Enter a name for this training session:")
+            if not ok or not session_name:
+                return None, False
+            weights_path = os.path.join(save_dir, f'{session_name}_model.bin')
+            json_path = os.path.join(save_dir, f'{session_name}_session.json')
+            if os.path.exists(weights_path) or os.path.exists(json_path):
+                msg = QMessageBox()
+                msg.setWindowTitle("Name Exists")
+                msg.setText(f"Session name '{session_name}' already exists. Please choose another name.")
+                msg.setIcon(QMessageBox.Warning)
+                msg.exec_()
+            else:
+                return session_name, True
+
+
+    def save_session(self):
+        session_name, ok = self.get_unique_session_name()
+        if ok and session_name:
+            self.train.save(session_name)
+            msg = QMessageBox()
+            msg.setWindowTitle("Session Saved")
+            msg.setText(f"Session '{session_name}' saved.")
+            msg.setIcon(QMessageBox.Information)
+            msg.exec_()
+
+
+    def load_session(self):
+        save_reply = QtWidgets.QMessageBox.question(
+            self,
+            "Save Current Session",
+            "Do you want to save the current session before loading a new one?",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Cancel
+        )
+        if save_reply == QtWidgets.QMessageBox.Cancel:
+            return
+        if save_reply == QtWidgets.QMessageBox.Yes:
+            session_name_save, ok = self.get_unique_session_name()
+            if ok and session_name_save:
+                self.train.save(session_name_save)
+                msg = QMessageBox()
+                msg.setWindowTitle("Session Saved")
+                msg.setText(f"Session '{session_name_save}' saved.")
+                msg.setIcon(QMessageBox.Information)
+                msg.exec_()
+        session_name, ok = QtWidgets.QInputDialog.getText(self, "Load Session", "Enter the name of the session to load:")
+        if ok and session_name:
+            self.train.load(session_name)
+            msg = QMessageBox()
+            msg.setWindowTitle("Session Loaded")
+            msg.setText(f"Session '{session_name}' loaded.")
+            msg.setIcon(QMessageBox.Information)
+            msg.exec_()
 
     def create_eval_layout(self):
         eval_layout = QFormLayout()
