@@ -9,7 +9,7 @@ from global_vars import (
 )
 from deploy import Deploy
 import sys
-
+from visualizer import Visualizer
 
 def print_header(title):
     print("\n" + "=" * 60)
@@ -34,7 +34,7 @@ def evaluate_original_data(deploy):
     print_header("📈 Evaluate Model on Original Data")
     try:
         score = deploy.get_eval_score(0)
-        print(f"✅ {browseDict['eval_matrice']}: {score}")
+        print(f"✅ {browseDict['eval matrice']}: {score}")
     except Exception as e:
         print(f"❌ Failed to evaluate: {str(e)}")
 
@@ -46,7 +46,7 @@ def evaluate_new_data(deploy):
     print_header("📈 Evaluate Model on New Data")
     try:
         score = deploy.get_eval_score(1)
-        print(f"✅ {browseDict['eval_matrice']}: {score}")
+        print(f"✅ {browseDict['eval matrice']}: {score}")
     except Exception as e:
         print(f"❌ Failed to evaluate: {str(e)}")
 
@@ -76,6 +76,32 @@ def save_model_cli(deploy):
     except Exception as e:
         print(f"❌ Error saving model: {str(e)}")
 
+def visualize_model(deploy):
+    vis = Visualizer()
+    print("Visualization options:")
+    print("  [1] Plot Loss vs Epoch")
+    print("  [2] Plot Training vs Validation")
+    eval_data = deploy.new_data != None
+    if eval_data:
+        print("  [3] Plot Evaluation vs Training")
+        print("  [4] Plot Evaluation vs Validation")
+    print("  [q] quite")
+    choice = input("Choose one option: ")
+
+    if choice == "q":
+        return
+    if choice not in ('1','2','3','4'):
+        print("Enter a valid option")
+        visualize_model()
+        return
+    if choice == '1': 
+        vis.plot_loss()
+    elif choice == '2': 
+        vis.plot_validation_vs_training()
+    elif choice == '3' and eval_data:
+        vis.plot_train_vs_eval()
+    elif choice == '4' and eval_data:
+        vis.plot_valid_vs_eval()
 
 def deploy_cli(deploy: Deploy):
     from trainCLI import train_cli
@@ -86,6 +112,7 @@ def deploy_cli(deploy: Deploy):
         print("\nAvailable actions:")
         print("  [a] Add new evaluation data")
         print("  [e] Evaluate on original data")
+        print("  [v] Visualize loss, validation, training, and evaluation metrices")
         if deploy.new_data:
             print("  [n] Evaluate on new data")
         print("  [u] Use model for inference")
@@ -106,6 +133,8 @@ def deploy_cli(deploy: Deploy):
             use_model_cli(deploy)
         elif choice == "s":
             save_model_cli(deploy)
+        elif choice == "v":
+            visualize_model(deploy)
         elif choice == "t":
             print("🔁 Returning to training CLI...")
             train_cli(deploy.trainer)
@@ -140,7 +169,7 @@ if __name__ == "__main__":
         data_address,
         task_type,
         (training_div, eval_div),
-        "",
+        "", [0,0,0]
     )
     hyperparams = hyper_params
     train = Train(prep, hyperparams)

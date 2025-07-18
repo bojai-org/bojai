@@ -4,6 +4,7 @@ import sys
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel, QFrame
 import torch
 import os
+from PyQt5.QtCore import Qt
 from global_vars import (
     browseDict,
     getNewModel,
@@ -86,6 +87,7 @@ class DeployWindow(QWidget):
         main_layout.addLayout(self.evaluate_data_layout(), 3, 0)
         main_layout.addLayout(self.save_model_layout(), 4, 0)
         main_layout.addLayout(self.use_model_layout(), 5, 0)
+        main_layout.addLayout(self.visualize_model(), 6, 0)
 
         self.main_layout = main_layout
 
@@ -193,6 +195,21 @@ class DeployWindow(QWidget):
 
         return update_layout
 
+    def visualize_model(self):
+        layout = QHBoxLayout()
+
+        visualize_button = QPushButton("Visualize Model")
+        visualize_button.setStyleSheet(
+            """
+            background-color: #EDE4F2; border-radius: 20px;
+            """
+        )
+        visualize_button.setFixedSize(300, 35)
+        visualize_button.clicked.connect(self.open_visualizer_window)
+
+        layout.addWidget(visualize_button)
+        return layout
+    
     def use_model(self):
         try:
             self.deploy.max_length = 50
@@ -516,6 +533,64 @@ class DeployWindow(QWidget):
     def show_deploy_window(self):
         pass
 
+    def open_visualizer_window(self):
+        try:
+            from visualizer import Visualizer
+
+            class VisualizerWindow(QtWidgets.QWidget):
+                def __init__(self, visualizer, deploy):
+                    self.deploy : Deploy = deploy
+                    super().__init__()
+                    self.visualizer : Visualizer = visualizer
+                    self.setWindowTitle("Model Visualizations")
+                    self.setGeometry(100, 100, 400, 300)
+                    layout = QVBoxLayout()
+
+                    title = QLabel("Choose a visualization")
+                    title.setAlignment(Qt.AlignCenter)
+                    title.setStyleSheet("font-size: 18px; font-weight: bold; color: black;")
+                    layout.addWidget(title)
+
+                    # Button 1: Loss vs Epoch
+                    loss_btn = QPushButton("Plot Loss vs Epoch")
+                    loss_btn.clicked.connect(self.visualizer.plot_loss)
+                    layout.addWidget(loss_btn)
+
+                    # Button 2: Train vs Validation
+                    val_train_btn = QPushButton("Plot Training vs Validation")
+                    val_train_btn.clicked.connect(self.visualizer.plot_validation_vs_training)
+                    layout.addWidget(val_train_btn)
+
+
+                    if self.deploy.new_data != None:
+                        # Button 3: Eval vs Train
+                        eval_train_btn = QPushButton("Plot Evaluation vs Training")
+                        eval_train_btn.clicked.connect(
+                            self.visualizer.plot_train_vs_eval
+                        )
+                        layout.addWidget(eval_train_btn)
+
+                        # Button 4: Eval vs Validation
+                        eval_valid_btn = QPushButton("Plot Evaluation vs Validation")
+                        eval_valid_btn.clicked.connect(
+                            self.visualizer.plot_valid_vs_eval
+                        )
+                        layout.addWidget(eval_valid_btn)
+
+                    self.setLayout(layout)
+
+            visualizer = Visualizer()
+            self.vis_window = VisualizerWindow(visualizer, self.deploy)
+            self.vis_window.show()
+
+        except Exception as e:
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Error")
+            msg.setText(f"Could not open visualizer window: {str(e)}")
+            msg.exec_()
+
+
 
 if __name__ == "__main__":
 
@@ -535,6 +610,7 @@ if __name__ == "__main__":
         task_type,
         (training_div, eval_div),
         "",
+        [0,0,0]
     )
     hyperparams = hyper_params
     train = Train(prep, hyperparams)

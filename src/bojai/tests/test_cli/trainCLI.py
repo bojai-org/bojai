@@ -8,7 +8,7 @@ getNewModel = lambda: "MockModel"
 getNewTokenizer = lambda: "MockTokenizer"
 hyper_params = {"lr": 0.001, "batch_size": 32}
 task_type = "classification"
-browseDict = {"eval_matrice": "Accuracy"}
+browseDict = {"eval matrice": "Accuracy"}
 init_model = lambda data, model: None
 
 
@@ -80,7 +80,7 @@ class BojaiTrainingCLI:
         self.print_header("📈 Model Evaluation")
         try:
             score = self.train.trainerManager.trainer.evaluate()
-            print(f"✅ Evaluation Result: {browseDict['eval_matrice']} = {score}")
+            print(f"✅ Evaluation Result: {browseDict['eval matrice']} = {score}")
         except Exception as e:
             print(f"❌ Evaluation failed: {str(e)}")
 

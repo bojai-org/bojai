@@ -58,6 +58,51 @@ def initialize_pipeline_cli():
             print("❌ Invalid architecture number. Exiting.")
             return
         architecture = arch_names[selected - 1]
+    
+    # Agent use
+    print("This pipeline is built to process data in a very specific way.")
+    print("If your data is stored differently, this pipeline won't work as-is.")
+    print("We offer an agent that can adapt the pipeline to your data — you just need to describe how your data is stored.")
+    agent_use = prompt_input("Would you like to use the agent? [Y/n] ").strip().lower()
+
+    while agent_use not in ("y", "n"):
+        print("Error: enter 'Y' for yes or 'n' for no.")
+        agent_use = prompt_input("Would you like to use the agent? [Y/n] ").strip().lower()
+
+    agent_use = agent_use == "y"
+    image_use = False
+    description = ""
+
+    if agent_use:
+        print("This is a beta feature and still under testing.")
+        print("To use the agent, you need Ollama installed on your computer.")
+        print("Download it here: https://ollama.com/download/windows")
+
+        change_mind = prompt_input("If you change your mind, enter 0. Press Enter to continue: ", allow_blank=True).strip()
+        if change_mind == "0":
+            agent_use = False
+        else:
+            # Ask about image use
+            image_use = prompt_input("Does your data contain images? [Y/n] ").strip().lower()
+            while image_use not in ("y", "n", "0"):
+                print("Error: enter 'Y' for yes, 'n' for no, or '0' to cancel.")
+                image_use = prompt_input("Does your data contain images? [Y/n] ").strip().lower()
+            if image_use == "0":
+                agent_use = False
+            else:
+                image_use = image_use == "y"
+
+        # Ask for data description
+        if agent_use:
+            description = prompt_input(
+                "Enter a thorough description of how your data is stored.\n"
+                "Refer to our docs site for guidelines.\n"
+                "Say something like: 'My data folder contains a .txt file where each line has input and output separated by a comma.'\n"
+                "Or: 'Each subfolder contains one image and a label file.'\n"
+                "Enter 0 to cancel: "
+            ).strip()
+            if description == "0":
+                agent_use = False
 
     # Build model/tokenizer based on options
     try:
@@ -82,6 +127,7 @@ def initialize_pipeline_cli():
             task_type,
             (train_split, eval_split),
             ",",
+            use_agent=[agent_use, description, image_use]
         )
     except Exception as e:
         print(f"❌ Error initializing pipeline: {str(e)}")

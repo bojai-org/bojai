@@ -36,6 +36,7 @@ class TrainingManager:
         self.device = device
         self.tokenizer = tokenizer
         self.hyperparams = hyper_params
+        self.logger = Logger()
 
     def initialise(self):
         self.start_model()
@@ -72,26 +73,6 @@ class TrainingManager:
         self.start_model()
 
 
-# ───────────────────────────────────────────────────────────────────────────────
-# Trainer: Abstract base class for all trainers
-# ───────────────────────────────────────────────────────────────────────────────
-"""
-🧠 Every custom Trainer must extend this abstract class.
-
-It ensures consistency across all trainers, and automatically sets up:
-- The model
-- The device
-- The tokenizer
-- Any hyperparameters you defined (they are auto-assigned as instance variables)
-
-You MUST implement:
-- train()
-- evaluate()
-
-This lets Bojai treat all trainers the same way, even though the inside can be 100% custom.
-"""
-
-
 class Trainer(ABC):
     def __init__(self, model, device, tokenizer, hyper_params: dict):
         super().__init__()
@@ -117,5 +98,73 @@ class Trainer(ABC):
         '''
         pass
 
+''''
+Singleton design pattern definition. This will be used as a tag to the Logger to turn it into a singleton class. 
+'''
+def singleton(cls):
+    instances = {}
+    def wrapper(*args, **kwargs):
+        if cls not in instances:
+            instances[cls] = cls(*args, **kwargs)
+        return instances[cls]
+    return wrapper
 
+@singleton
+class Logger:
+    """
+    @ADD TO ALL trainer.py(s)
+    Singleton logger to track per-epoch training/validation metrics, and final evaluation score.
 
+    Logs:
+        - self.logs[epoch] = {"train": ..., "valid": ...}
+        - self.eval = final evaluation score (single scalar)
+    """
+
+    def __init__(self):
+        self.logs = {}
+        self.eval = None  # separate from epoch logging
+
+    '''
+    Logs either the final evaluation score or epoch-specific training/validation metrics.
+
+    - If `eval_score` is provided, logs it as the final evaluation score.
+    - If `epoch`, `train`, or `valid` are provided, logs them under the specified epoch.
+    - If both `eval_score` and any of (`epoch`, `train`, `valid`) are given in the same call,
+      raises an error to prevent optimization bias (evaluation must occur post-training).
+
+    Behavior:
+    - If the given epoch already exists, its values are updated with the new data.
+    - If it doesn't exist, a new epoch entry is created with the provided values.
+    '''
+    def log(self, eval_score=None, epoch=None, train=None, valid=None):
+        if eval_score is not None and any(x is not None for x in [epoch, train, valid]):
+            raise ValueError("Cannot log both eval_score and epoch-based logs in the same call. Read about Optimization bias in machine learning.")
+
+        if eval_score is not None:
+            self.eval = eval_score
+            return
+
+        if epoch is None:
+            raise ValueError("Epoch must be specified when logging train/valid metrics.")
+
+        if epoch not in self.logs:
+            self.logs[epoch] = {}
+
+        if train is not None:
+            self.logs[epoch]['train'] = train
+
+        if valid is not None:
+            self.logs[epoch]['valid'] = valid
+
+    def log_eval(self, score: float):
+        """Logs the one-time final evaluation score (not tied to epoch)."""
+        self.eval = score
+
+    def get_logs(self):
+        return self.logs
+
+    def get_eval(self):
+        return self.eval
+
+    def __str__(self):
+        return f"Logs: {self.logs}\nEval: {self.eval}"

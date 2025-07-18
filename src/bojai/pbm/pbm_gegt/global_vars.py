@@ -11,7 +11,7 @@ browseDict = {
     "use_model_text": "Enter one picture to see output",
     "init": False,
     "type": 0,  # 0 is image, 1 is voice, 2 is text or numbers
-    "eval_matrice": "perplexity",
+    "eval matrice": "perplexity",
     "options": 0,  # 0 means no need for options, 1 means there is need for options. must have an options dict
     "options-where": -1,  # 0 means options for tokenizer, 1 means options for model; must be -1 if options is 0
 }
