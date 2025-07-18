@@ -7,15 +7,7 @@ from pathlib import Path
 # Base directory where this script lives
 SCRIPT_DIR = Path(__file__).resolve().parent
 
-def update_pipeline_logic(code: str) -> str:
-    # Placeholder: Add custom logic here
-    # e.g., inject new steps, modify config, etc.
-    if "# New Step Placeholder" in code:
-        return code.replace("# New Step Placeholder", "def new_step():\n    print('New step added')")
-    
-    # Implementation goes here
-    pass
-def build_pipeline(pipeline_name, replace):
+def build_pipeline(pipeline_name, directory_arg, replace):
     workspace_dir = SCRIPT_DIR / "applets" / f"bm_{pipeline_name}"
 
     if workspace_dir.exists() and not replace:
@@ -23,61 +15,46 @@ def build_pipeline(pipeline_name, replace):
         return
 
     workspace_dir.mkdir(parents=True, exist_ok=True)
-    print(f"{workspace_dir} directory created, now copying files")
-    print(f"SCRIPT_DIR: {SCRIPT_DIR}")
-    for folder in ["pipelineCLI", "pipelineUI"]:
-        source_dir = SCRIPT_DIR / folder
-        for file_path in source_dir.iterdir():
-            if file_path.is_file():
-                shutil.copy(file_path, workspace_dir / file_path.name)
-                print(f"copied {file_path.name}")
+    print(f"{workspace_dir} directory created.")
 
+    # Step 1: Copy all files from user directories (priority)
+    if directory_arg.lower() != "none":
+        directories = [Path(d.strip()) for d in directory_arg.split(",")]
+        for user_dir in directories:
+            if user_dir.exists():
+                for file_path in user_dir.iterdir():
+                    if file_path.is_file():
+                        shutil.copy(file_path, workspace_dir / file_path.name)
+                        print(f"[user] copied {file_path.name}")
+            else:
+                print(f"Warning: custom pipeline directory '{user_dir}' not found.")
+
+    # Step 2: Copy pipeline-specific files
     specific_dir = SCRIPT_DIR / "pbm" / f"pbm_{pipeline_name}"
     if specific_dir.exists():
         for file_path in specific_dir.iterdir():
             if file_path.is_file():
-                shutil.copy(file_path, workspace_dir / file_path.name)
-                print(f"copied {file_path.name}")
-    else:
-        print(f"Warning: pipeline-specific directory '{pipeline_name}' not found.")
-        return
-
-    print(f"Initialized workspace for pipeline '{pipeline_name}' at {workspace_dir}")
-
-
-def build_dir(pipeline_name, directory, replace):
-    workspace_dir = SCRIPT_DIR / "applets" / f"bm_{pipeline_name}"
-
-    if workspace_dir.exists() and not replace:
-        print(f"Workspace '{pipeline_name}' already exists. Use --replace to rebuild.")
-        return
-
-    workspace_dir.mkdir(parents=True, exist_ok=True)
-    print(f"{workspace_dir} directory created, now copying files")
-
-    cli_dir = SCRIPT_DIR / "pipelineCLI"
-    for file_path in cli_dir.iterdir():
-        if file_path.is_file():
-            shutil.copy(file_path, workspace_dir / file_path.name)
-            print(f"copied {file_path.name}")
-
-    ui_dir = SCRIPT_DIR / "pipelineUI"
-    for file_path in ui_dir.iterdir():
-        if file_path.is_file():
-            shutil.copy(file_path, workspace_dir / file_path.name)
-            print(f"copied {file_path.name}")
-
-    user_dir = Path(directory)
-    if user_dir.exists():
-        for file_path in user_dir.iterdir():
+                dest_file = workspace_dir / file_path.name
+                if not dest_file.exists():
+                    shutil.copy(file_path, dest_file)
+                    print(f"[specific] copied {file_path.name}")
+                else:
+                    print(f"[specific] skipped {file_path.name} (already exists)")
+    
+    # Step 3: Copy from default CLI/UI folders only if file not already copied
+    for folder in ["pipelineCLI", "pipelineUI"]:
+        source_dir = SCRIPT_DIR / folder
+        for file_path in source_dir.iterdir():
             if file_path.is_file():
-                shutil.copy(file_path, workspace_dir / file_path.name)
-                print(f"copied {file_path.name}")
-    else:
-        print(f"Warning: custom pipeline directory '{directory}' not found.")
-        return
+                dest_file = workspace_dir / file_path.name
+                if not dest_file.exists():
+                    shutil.copy(file_path, dest_file)
+                    print(f"[default] copied {file_path.name}")
+                else:
+                    print(f"[default] skipped {file_path.name} (already exists)")
+    
 
-    print(f"Initialized workspace for pipeline '{pipeline_name}' at {workspace_dir}")
+    print(f"✅ Initialized workspace for pipeline '{pipeline_name}' at {workspace_dir}")
 
 
 def new_custom_pipeline(pipeline_name, directory):
@@ -221,12 +198,8 @@ def main():
 
     parser_build = subparsers.add_parser("build", help="Build a pipeline")
     parser_build.add_argument("--pipeline", required=True)
-    parser_build.add_argument(
-        "--replace", action="store_true", help="Overwrite existing build"
-    )
-    parser_build.add_argument(
-        "--directory", default="none", help="Custom pipeline directory"
-    )
+    parser_build.add_argument("--replace", action="store_true", help="Overwrite existing build")
+    parser_build.add_argument("--directory", default="none", help="Comma-separated custom pipeline directories")
 
     parser_remove = subparsers.add_parser("remove", help="Remove a built pipeline")
     parser_remove.add_argument("--pipeline", required=True)
@@ -252,10 +225,7 @@ def main():
     if args.command == "start":
         launch_pipeline(args.pipeline, args.stage, "UI" if args.ui else "CLI")
     elif args.command == "build":
-        if args.directory == "none":
-            build_pipeline(args.pipeline, args.replace)
-        else:
-            build_dir(args.pipeline, args.directory, args.replace)
+        build_pipeline(args.pipeline, args.directory, args.replace)
     elif args.command == "remove":
         remove_pipeline(args.pipeline)
     elif args.command == "create":
