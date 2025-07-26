@@ -87,13 +87,11 @@ class Train:
             json.dump(session_info, f, indent=2)
 
     def load(self, session_name):
-
         save_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../train_sessions'))
         json_path = os.path.join(save_dir, f'{session_name}_session.json')
         weights_path = os.path.join(save_dir, f'{session_name}_model.bin')
         if not os.path.exists(json_path) or not os.path.exists(weights_path):
-            print(f'Session files for "{session_name}" not found.')
-            return
+            raise ValueError("Session not found")
         with open(json_path, 'r') as f:
             session_info = json.load(f)
         self.edit_hyperparams(session_info.get('hyperparameters', []))

@@ -149,7 +149,11 @@ def load_session(train):
             if not os.path.exists(filename):
                 print(f"❌ No saved session found with name '{session_name}'.")
                 return
-            train.load()
+            try: 
+                train.load()
+            except ValueError as e: 
+                print(f"Session {session_name} does not exist.")
+                return
             print(f"✅ Session '{session_name}_model.pt' loaded.")
         except Exception as e:
             print(f"❌ Failed to load session: {str(e)}")

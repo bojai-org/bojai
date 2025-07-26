@@ -211,7 +211,15 @@ class TrainWindow(QtWidgets.QWidget):
                 msg.exec_()
         session_name, ok = QtWidgets.QInputDialog.getText(self, "Load Session", "Enter the name of the session to load:")
         if ok and session_name:
-            self.train.load(session_name)
+            try: 
+                self.train.load(session_name)
+            except ValueError as e: 
+                msg = QMessageBox()
+                msg.setWindowTitle("Session Loading failed")
+                msg.setText(f"Session '{session_name}' is not found.")
+                msg.setIcon(QMessageBox.Information)
+                msg.exec_()
+                return
             info_layout = self.create_info_section()
             self.main_layout.addLayout(info_layout, 2, 0)  # Hyperparameter section below
             msg = QMessageBox()
