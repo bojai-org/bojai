@@ -19,7 +19,7 @@ class DescriptionError(Exception):
 
 
 class DataProcessorAgent:
-    def __init__(self, address, data_dir, model_name="llama2") -> None:
+    def __init__(self, address, data_dir, model_name="minstral") -> None:
         self.tokenizer = None
         self.model = model_name
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
