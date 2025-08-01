@@ -1,7 +1,6 @@
 import argparse
 import shutil
 import subprocess
-import os
 from pathlib import Path
 import logging
 
@@ -221,31 +220,15 @@ def main():
     parser_list.add_argument("--pipelines", action="store_true")
     parser_list.add_argument("--builds", action="store_true")
 
+    # Modify command
     parser_modify = subparsers.add_parser('modify', help='Modify an existing pipeline')
     parser_modify.add_argument('--pipeline', required=True, help='Name of the pipeline to modify')
     parser_modify.add_argument('--directory', required=True, help='Directory to which the pipeline will be copied')
 
+    # Checkout command
     parser_checkout = subparsers.add_parser("checkout", help = "Checkout an existing directory")
     parser_checkout.add_argument("--directory", required = True)
     parser_checkout.add_argument("--ui", action = "store_true")
-    # Deploy command
-    parser_deploy = subparsers.add_parser("deploy", help="Deploy a pipeline as an API")
-    deploy_subparsers = parser_deploy.add_subparsers(dest="deploy_command", required=True)
-
-    # Deploy start
-    deploy_start = deploy_subparsers.add_parser("start", help="Start a pipeline API server")
-    deploy_start.add_argument("pipeline", help="Name of the pipeline to start")
-    deploy_start.add_argument("model_path", help="Path to the trained model file (.bin)")
-    deploy_start.add_argument("--port", "-p", type=int, default=8000, help="Port to run the API server on")
-    deploy_start.add_argument("--host", default="127.0.0.1", help="Host to run the API server on")
-
-    # Deploy stop
-    deploy_stop = deploy_subparsers.add_parser("stop", help="Stop a running pipeline API server")
-    deploy_stop.add_argument("pipeline", help="Name of the pipeline to stop")
-
-    # Deploy status
-    deploy_status = deploy_subparsers.add_parser("status", help="Get status of deployed pipelines")
-    deploy_status.add_argument("pipeline", nargs="?", help="Name of the pipeline to check status")
 
     args = parser.parse_args()
 
@@ -263,15 +246,6 @@ def main():
         modify_pipeline(args.pipeline, args.directory)
     elif args.command == "checkout":
         checkout_directory(args.directory, "UI" if args.ui else "CLI")
-    elif args.command == "deploy":
-        from bojai.deploy.cli import start_pipeline, stop_pipeline, get_pipeline_status
-        
-        if args.deploy_command == "start":
-            start_pipeline(args)
-        elif args.deploy_command == "stop":
-            stop_pipeline(args)
-        elif args.deploy_command == "status":
-            get_pipeline_status(args)
 
 if __name__ == "__main__":
     main()

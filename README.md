@@ -96,13 +96,15 @@ Undergraduate student of Computer Science at the University of British Columbia.
 For anything related to Bojai or business inquiries, contact: soghomonb@bojai.org
 For personal messages, you’re welcome to email me at: soghmon5@gmail.com
 
-I'd love to hear from you!
-
 ---
 
-## License
+## Contributors 
 
-MIT License — free to use, fork, and improve.
+Aram Jnad - Rising high school senior at the American International School in Dubai. Aram helped testing the agent, and is working on exciting API-related project. 
+
+Fayez Farrouj - Fayez is a student in the University of British Columbia. He is working on improving BojAI commands, like checkout and modify. 
+
+Zein XX - Student at Alkumait Blaidy School for the Superiors in Syria. Zein worked on the saving and loading of training sessions and testing many of our new features.
 
 ---
 
