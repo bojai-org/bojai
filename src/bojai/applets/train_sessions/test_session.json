@@ -1,0 +1,12 @@
+{
+  "model_name": "FineTunedTransformerGET",
+  "hyperparameters": {
+    "batch_size": 32,
+    "learning_rate": 1e-05,
+    "num_epochs": 4,
+    "num_workers": 0
+  },
+  "loggs": {},
+  "timestamp": "2025-07-18T22:13:19.082781",
+  "model_weights": "test_model.bin"
+}

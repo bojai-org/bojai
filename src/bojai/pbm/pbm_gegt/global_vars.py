@@ -1,5 +1,4 @@
 from model import FineTunedTransformerGEGT
-import requests
 from transformers import ViTImageProcessor, BertTokenizer
 
 # file : 1 , dir : 0
@@ -44,32 +43,6 @@ hyper_params = {
 
 class CannotUseFunctionException(Exception):
     pass
-
-
-def validate_prep(prep):
-    with open("src\counter.txt", "r") as file:
-        output = file.readlines()[1]
-    # URL of your Flask app (update with your actual URL)
-    url = "https://desolate-beach-94387-f004ff3976e8.herokuapp.com/"
-
-    # Construct the URL with query parameters
-    request_url = f"{url}/personify?a={task_type}&b={output}"
-
-    # Send the GET request
-    response = requests.get(request_url)
-    result = 0
-    if response.status_code == 200:
-        # Parse the response JSON and get the result
-        data = response.json()
-        result = data.get("result")  # assuming the result is inside a key 'result'
-        return True, result
-
-    if response.status_code == 400:
-        raise CannotUseFunctionException("this app is blocked here, contact support")
-
-    else:
-        print(str(response.status_code))
-        raise ValueError("returned with request code: " + str(response.status_code))
 
 
 options = {}

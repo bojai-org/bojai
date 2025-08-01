@@ -1,7 +1,6 @@
 from model import FineTunedTransformerGET
 from transformers import AutoTokenizer, AutoModel
 import numpy as np
-import requests
 
 # file : 1 , dir : 0
 

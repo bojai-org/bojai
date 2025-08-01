@@ -8,8 +8,6 @@ from transformers import AutoTokenizer, AutoModel
 from sklearn.metrics import accuracy_score
 import numpy as np
 from processor import Processor
-import requests
-
 
 # decides which trainer to use, depending on the task. Used by the train stage
 class TrainingManager:

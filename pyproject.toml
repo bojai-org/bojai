@@ -14,7 +14,6 @@ authors = [
 ]
 
 dependencies = [
-  "cryptography==42.0.5",
   "numpy==1.26.4",
   "pandas==2.2.3",
   "Pillow==11.2.1",
@@ -23,7 +22,6 @@ dependencies = [
   "PyQt5_sip==12.16.1",
   "pytest==8.3.5",
   "PyYAML==6.0.2",
-  "Requests==2.32.3",
   "scikit_learn==1.6.1",
   "torch==2.3.0",
   "transformers==4.41.2"
