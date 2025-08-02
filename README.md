@@ -106,7 +106,7 @@ Aram Jnad - Rising high school senior at the American International School in Du
 
 Fayez Farrouj - Fayez is a student in the University of British Columbia. He is working on improving BojAI commands, like checkout and modify. 
 
-Zein XX - Student at Alkumait Blaidy School for the Superiors in Syria. Zein worked on the saving and loading of training sessions and testing many of our new features.
+Zein Baddour - Student at Alkumait Blaidy School for the Superiors in Syria. Zein worked on the saving and loading of training sessions and testing many of our new features.
 
 ---
 
