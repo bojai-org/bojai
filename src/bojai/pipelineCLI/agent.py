@@ -19,7 +19,7 @@ class DescriptionError(Exception):
 
 
 class DataProcessorAgent:
-    def __init__(self, address, data_dir, model_name="minstral") -> None:
+    def __init__(self, address, data_dir, model_name="mistral") -> None:
         self.tokenizer = None
         self.model = model_name
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -133,7 +133,7 @@ class DataProcessorAgent:
 
 
     def test_function(self):
-        from custom_data_processor import YourDataProcessor
+        from custom_data_processor_temp import YourDataProcessor
         processor = YourDataProcessor(self.data_dir, [0.5, 0.5], self.model, None, self.tokenizer)
         processor.get_item_untokenized(0)
             
