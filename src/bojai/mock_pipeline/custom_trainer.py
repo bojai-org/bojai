@@ -49,9 +49,11 @@ class ImplementYourTrainer(Trainer):
 
         Example (pseudo-code):
         total_steps = len(self.training_data)
-        for i, data in enumerate(self.training_data):
-            loss = self.model.train_step(data)
+        i = 0
+        for x,y in self.training_data: #this returns the "__get_item__" function you coded earlier. Make sure your get_train_eval divides the data correctly.
+            loss = self.model.train_step(x,y)
             progress = int((i + 1) / total_steps * 100)
+            i +=1
             progress_worker.emit(progress)
             loss_worker.emit(loss)
             qthread.msleep(1)

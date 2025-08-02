@@ -1,7 +1,4 @@
 from abc import ABC, abstractmethod
-import os
-import json
-from datetime import datetime
 # ───────────────────────────────────────────────────────────────────────────────
 # TrainingManager: Chooses the right Trainer for your model and passes it what it needs
 # ───────────────────────────────────────────────────────────────────────────────
@@ -69,7 +66,7 @@ class TrainingManager:
 
     def get_required_hyperparams(self, task_type):
         # Define required hyperparameters based on task_type
-        return []
+        return list(self.hyperparams.keys())
 
     def edit_hyper_params(self, new_hyperparams: dict):
         self.hyperparams = new_hyperparams
@@ -86,6 +83,7 @@ class Trainer(ABC):
         self.device = device
         self.tokenizer = tokenizer
         self.hyper_params = hyper_params  # Store the dict, not dict_keys
+        self.logger = Logger()
 
     @abstractmethod
     def train(self, qthread, progress_worker, loss_worker):
@@ -139,14 +137,13 @@ class Logger:
     - If the given epoch already exists, its values are updated with the new data.
     - If it doesn't exist, a new epoch entry is created with the provided values.
     '''
-    def log(self, eval_score=None, epoch=None, train=None, valid=None):
-        if eval_score is not None and any(x is not None for x in [epoch, train, valid]):
+    def log(self, eval_score=None, epoch=None, train=None, valid=None, loss=None):
+        if eval_score is not None and any(x is not None for x in [train, valid, epoch]):
             raise ValueError("Cannot log both eval_score and epoch-based logs in the same call. Read about Optimization bias in machine learning.")
-
-        if eval_score is not None:
-            self.eval = eval_score
+        
+        if eval_score is not None: 
+            self.logs[-1] = eval_score
             return
-
         if epoch is None:
             raise ValueError("Epoch must be specified when logging train/valid metrics.")
 
@@ -158,6 +155,11 @@ class Logger:
 
         if valid is not None:
             self.logs[epoch]['valid'] = valid
+        
+        if loss is not None:
+            self.logs[epoch]['loss'] = loss
+
+
 
     def log_eval(self, score: float):
         """Logs the one-time final evaluation score (not tied to epoch)."""
@@ -171,6 +173,6 @@ class Logger:
 
     def __str__(self):
         return f"Logs: {self.logs}\nEval: {self.eval}"
-    
+
     def set_logger(self, logs):
         self.logs = logs
