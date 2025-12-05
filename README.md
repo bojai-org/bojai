@@ -9,6 +9,8 @@ Whether you're an ML researcher, engineer, or educator, BojAI gives you:
 - 🧠 Designed for experimentation, education, and production
 
 Instead of spending time wiring data processors, models, and training loops together, BojAI lets you focus purely on building your model's logic and training strategy.
+
+
 We are actively developing major improvements to BojAI and will share updates soon. In the meantime, BojAI remains fully usable and freely accessible to everyone.
 
 
