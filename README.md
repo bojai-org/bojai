@@ -1,4 +1,4 @@
-# BojAI — Build, Train, and Deploy ML Models Without Writing Boilerplate
+# BojAI - Build, Train, and Deploy ML Models Without Writing Boilerplate
 
 **BojAI** is an open-source framework that transforms how machine learning is built, trained, and deployed.
 
