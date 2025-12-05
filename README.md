@@ -10,7 +10,7 @@ Whether you're an ML researcher, engineer, or educator, BojAI gives you:
 
 Instead of spending time wiring data processors, models, and training loops together, BojAI lets you focus purely on building your model's logic and training strategy.
 
-![Welcome to 2.0 release!](2.0-release.png)
+We are currently working on big improvements to BojAI, we will announce them soon! BojAI remains usable and freely accessible to everyone. 
 [Checkout our BojAI 2.0 Release notes here](https://dashing-sweater-5f9.notion.site/Introducing-Bojai-2-0-241d26b066d58014964eca9dac35287b?source=copy_link)
 ---
 
