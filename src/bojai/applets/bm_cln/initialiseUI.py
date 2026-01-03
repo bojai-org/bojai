@@ -18,7 +18,7 @@ class MainWindow(QtWidgets.QWidget):
         main_layout = QtWidgets.QVBoxLayout()
 
         # Title
-        title = QtWidgets.QLabel("BojAI")
+        title = QtWidgets.QLabel("BojAI Vexor")
         title.setStyleSheet("font-size: 20px; font-weight: bold; color: black;")
         title.setAlignment(QtCore.Qt.AlignLeft)
         main_layout.addWidget(title)  # Top, centered
