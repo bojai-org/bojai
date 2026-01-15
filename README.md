@@ -13,8 +13,10 @@ Instead of spending time wiring data processors, models, and training loops toge
 
 While BojAI remains fully usable, we are working on significant architectural improvements, if you're interested in contributing see the github issue below:
 
-[BojAI Architecture improvement](https://github.com/bojai-org/bojai/issues/7)
+[BojAI Architecture improvement](https://github.com/bojai-org/bojai/issues/7) 
+
 [Checkout our BojAI 2.0 Release notes here](https://dashing-sweater-5f9.notion.site/Introducing-Bojai-2-0-241d26b066d58014964eca9dac35287b?source=copy_link)
+
 ---
 
 ## Features
